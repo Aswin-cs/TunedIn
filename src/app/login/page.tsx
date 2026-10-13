@@ -64,7 +64,7 @@ export default function LoginPage() {
             </div>
           </div>
           <div className={styles.brandText}>
-            <span className={styles.brandTitle}>OCTAVE</span>
+            <span className={styles.brandTitle}>TUNEDIN</span>
             <span className={styles.brandSubtitle}>Architectural Acoustics</span>
           </div>
         </Link>
@@ -133,7 +133,7 @@ export default function LoginPage() {
 
                 <p className={styles.cardDescription}>
                   {activeTab === "login"
-                    ? "Listen to millions of tracks, curated playlists, and spatial podcasts. Free on Octave."
+                    ? "Listen to millions of tracks, curated playlists, and spatial podcasts. Free on TunedIn."
                     : "Discover pure acoustic reproduction and master-fidelity streaming engineered for audiophiles."}
                 </p>
               </div>
@@ -251,7 +251,7 @@ export default function LoginPage() {
               <div className={styles.switchPrompt}>
                 <span key={activeTab} className={styles.tabInlineTransition}>
                   {activeTab === "login"
-                    ? "New to Octave?"
+                    ? "New to TunedIn?"
                     : "Already have an account?"}
                 </span>
                 <button

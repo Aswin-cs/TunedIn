@@ -4,8 +4,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: #190202;
-  color: var(--color-calm-white);
+  background-color: var(--canvas-base);
+  color: var(--text-high);
   font-family: var(--font-body);
   overflow-x: hidden;
   /* Architectural Blueprint Grid */
@@ -44,7 +44,7 @@
   width: 720px;
   height: 720px;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(255, 183, 120, 0.22) 0%, rgba(78, 4, 1, 0.55) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(255, 184, 109, 0.22) 0%, rgba(78, 4, 1, 0.55) 50%, transparent 75%);
   filter: blur(140px);
   animation: pulseGlow2 15s ease-in-out infinite;
 }
@@ -136,10 +136,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(200, 166, 164, 0.08);
-  background-color: rgba(24, 2, 2, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--specular-border-subtle);
+  background-color: var(--surface-glass-low);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 @media (min-width: 1024px) {
@@ -161,8 +161,8 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-deep-maroon), var(--color-wine-mid));
-  border: 1px solid rgba(232, 140, 43, 0.4);
+  background: linear-gradient(135deg, var(--color-deep-maroon), var(--ambient-floor));
+  border: 1px solid var(--specular-border-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,12 +367,12 @@
   overflow: hidden;
   border-radius: 28px;
   padding: 2.75rem 2.25rem 2.5rem 2.25rem;
-  background: #160202;
-  backdrop-filter: blur(36px);
-  -webkit-backdrop-filter: blur(36px);
-  /* Crisp 1px luminous hairline border with top light catch */
-  border: 1px solid rgba(254, 251, 243, 0.16);
-  border-top-color: rgba(254, 251, 243, 0.35);
+  background: linear-gradient(180deg, var(--surface-glass-medium) 0%, rgba(22, 5, 5, 0.88) 100%), var(--ambient-floor);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  /* Crisp 1px specular border subtle */
+  border: 1px solid var(--specular-border-subtle);
+  border-top-color: rgba(254, 251, 243, 0.25);
   /* Rich deep shadow + subtle amber ambient glow breathing */
   box-shadow: 
     0 30px 70px -10px rgba(0, 0, 0, 0.85),
@@ -407,9 +407,9 @@
   inset: 0;
   background: radial-gradient(
     circle at 50% 8%,
-    rgba(120, 12, 6, 0.65) 0%,
-    rgba(38, 4, 4, 0.92) 50%,
-    #120101 100%
+    rgba(78, 4, 1, 0.75) 0%,
+    rgba(34, 13, 13, 0.95) 50%,
+    var(--canvas-base) 100%
   );
 }
 
@@ -552,8 +552,8 @@
 }
 
 .tabPillTrack {
-  background: rgba(20, 2, 2, 0.85);
-  border: 1px solid rgba(254, 251, 243, 0.12);
+  background: rgba(22, 5, 5, 0.85);
+  border: 1px solid var(--specular-border-subtle);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
   border-radius: 9999px;
   padding: 4px;
@@ -569,7 +569,7 @@
   left: 4px;
   width: calc(50% - 4px);
   border-radius: 9999px;
-  background-color: var(--color-orange-grove);
+  background: linear-gradient(135deg, var(--color-orange-grove), var(--color-warm-amber));
   box-shadow: 0 4px 14px rgba(232, 140, 43, 0.35);
   transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
@@ -611,12 +611,12 @@
 }
 
 .tabButtonActive {
-  color: #1a0202;
+  color: var(--canvas-base);
   font-weight: 600;
 }
 
 .tabButtonActive:hover {
-  color: #1a0202;
+  color: var(--canvas-base);
 }
 
 .tabIcon {
@@ -662,7 +662,7 @@
   position: relative;
   overflow: hidden;
   background-color: var(--color-calm-white);
-  color: #170202;
+  color: var(--canvas-base);
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.95rem;
@@ -724,7 +724,7 @@
   font-family: var(--font-body);
   font-size: 0.75rem;
   line-height: 1.5;
-  color: rgba(200, 166, 164, 0.75);
+  color: var(--text-muted);
   max-width: 22rem;
   margin: 0 auto;
 }

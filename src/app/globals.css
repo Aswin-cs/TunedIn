@@ -1,17 +1,17 @@
 :root {
-  /* Octave Architectural Acoustics Material Tokens */
-  --surface: #290807;
-  --surface-dim: #290807;
-  --surface-bright: #572d2a;
-  --surface-container-lowest: #220404;
-  --surface-container-low: #33100f;
-  --surface-container: #381412;
-  --surface-container-high: #451f1c;
-  --surface-container-highest: #522926;
-  --on-surface: #ffdad6;
+  /* TunedIn Material Design Tokens from design.md */
+  --surface: #220d0d;
+  --surface-dim: #220d0d;
+  --surface-bright: #4d3231;
+  --surface-container-lowest: #1c0808;
+  --surface-container-low: #2b1515;
+  --surface-container: #301919;
+  --surface-container-high: #3c2423;
+  --surface-container-highest: #482e2d;
+  --on-surface: #ffdad8;
   --on-surface-variant: #dac2b0;
-  --inverse-surface: #ffdad6;
-  --inverse-on-surface: #4d2522;
+  --inverse-surface: #ffdad8;
+  --inverse-on-surface: #432a29;
   --outline: #a28d7d;
   --outline-variant: #544436;
   --surface-tint: #ffb778;
@@ -20,14 +20,14 @@
   --primary-container: #e88c2b;
   --on-primary-container: #572e00;
   --inverse-primary: #8e4e00;
-  --secondary: #ffb4a7;
-  --on-secondary: #611209;
-  --secondary-container: #80291d;
-  --on-secondary-container: #ff9a89;
-  --tertiary: #e2bebc;
-  --on-tertiary: #412b29;
-  --tertiary-container: #bb9a98;
-  --on-tertiary-container: #4a3231;
+  --secondary: #ffb86d;
+  --on-secondary: #492900;
+  --secondary-container: #ce7e14;
+  --on-secondary-container: #402300;
+  --tertiary: #ffb4a7;
+  --on-tertiary: #611209;
+  --tertiary-container: #f4816e;
+  --on-tertiary-container: #6c1b10;
   --error: #ffb4ab;
   --on-error: #690005;
   --error-container: #93000a;
@@ -36,34 +36,65 @@
   --primary-fixed-dim: #ffb778;
   --on-primary-fixed: #2e1500;
   --on-primary-fixed-variant: #6c3a00;
-  --secondary-fixed: #ffdad4;
-  --secondary-fixed-dim: #ffb4a7;
-  --on-secondary-fixed: #400100;
-  --on-secondary-fixed-variant: #80291d;
-  --tertiary-fixed: #ffdad8;
-  --tertiary-fixed-dim: #e2bebc;
-  --on-tertiary-fixed: #2a1615;
-  --on-tertiary-fixed-variant: #5a403f;
-  --background: #290807;
-  --on-background: #ffdad6;
-  --surface-variant: #522926;
+  --secondary-fixed: #ffdcbd;
+  --secondary-fixed-dim: #ffb86d;
+  --on-secondary-fixed: #2c1600;
+  --on-secondary-fixed-variant: #683c00;
+  --tertiary-fixed: #ffdad4;
+  --tertiary-fixed-dim: #ffb4a7;
+  --on-tertiary-fixed: #400100;
+  --on-tertiary-fixed-variant: #80291d;
+  --background: #220d0d;
+  --on-background: #ffdad8;
+  --surface-variant: #482e2d;
 
-  /* Brand Accents & Semantic Glass Fills */
+  /* Surface Hierarchy & Backgrounds from design.md */
+  --canvas-base: #120303;
+  --ambient-maroon: #4E0401;
+  --ambient-floor: #160505;
+  --surface-glass-low: rgba(22, 5, 5, 0.55);
+  --surface-glass-medium: rgba(78, 4, 1, 0.28);
+  --surface-glass-high: rgba(254, 251, 243, 0.08);
+
+  /* Brand Accents & Interactions from design.md */
   --color-orange-grove: #E88C2B;
+  --color-warm-amber: #FFA73F;
+  --subtle-accent-wash: rgba(232, 140, 43, 0.15);
   --color-deep-maroon: #4E0401;
-  --color-muted-rose: #C8A6A4;
-  --color-dim-rose: #8E6563;
-  --color-wine-void: #1C0202;
-  --color-wine-mid: #2B0303;
-  --color-wine-card: #3A0302;
+  --color-maroon-floor: #160505;
+
+  /* Typography & Contrast Tokens from design.md */
   --color-calm-white: #FEFBF3;
+  --text-high: #FEFBF3;
+  --text-medium: rgba(254, 251, 243, 0.70);
+  --text-muted: rgba(254, 251, 243, 0.45);
+  --text-disabled: rgba(254, 251, 243, 0.24);
+  --color-muted-rose: rgba(254, 251, 243, 0.70);
+  --color-dim-rose: rgba(254, 251, 243, 0.45);
 
-  /* Typography strictly from design.md: Epilogue, Manrope, Space Mono only */
+  /* Specular Borders Lighting from design.md */
+  --specular-border-subtle: rgba(254, 251, 243, 0.08);
+  --specular-border-accent: rgba(232, 140, 43, 0.35);
+
+  /* Typography font stacks strictly from design.md: Epilogue + Inter */
   --font-display: var(--font-epilogue), 'Epilogue', sans-serif;
-  --font-body: var(--font-manrope), 'Manrope', sans-serif;
-  --font-mono: var(--font-space-mono), 'Space Mono', monospace;
+  --font-body: var(--font-inter), 'Inter', sans-serif;
+  --font-mono: var(--font-space-mono), monospace;
 
-  /* Radii */
+  /* Spacing Tokens from design.md */
+  --gutter: 1.25rem;
+  --gutter-desktop: 1.75rem;
+  --margin: 1rem;
+  --margin-tablet: 1.5rem;
+  --margin-desktop: 2rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.25rem;
+  --space-2xl: 3rem;
+
+  /* Radii from design.md */
   --radius-sm: 0.25rem;
   --radius-default: 0.5rem;
   --radius-md: 0.75rem;
@@ -85,8 +116,8 @@ body {
 
 body {
   min-height: 100%;
-  background-color: var(--color-wine-void);
-  color: var(--color-calm-white);
+  background-color: var(--canvas-base);
+  color: var(--text-high);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

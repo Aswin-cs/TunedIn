@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Epilogue, Manrope, Space_Mono } from "next/font/google";
+import { Epilogue, Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 
 const epilogue = Epilogue({
@@ -8,8 +8,8 @@ const epilogue = Epilogue({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
@@ -21,8 +21,8 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OCTAVE - Sound Sanctuary",
-  description: "Architectural acoustics streaming platform.",
+  title: "TunedIn - Sound Sanctuary",
+  description: "High-fidelity music streaming service crafted for audiophiles and creators.",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${epilogue.variable} ${manrope.variable} ${spaceMono.variable}`}
+      className={`${epilogue.variable} ${inter.variable} ${spaceMono.variable}`}
     >
       <body>{children}</body>
     </html>
