@@ -1249,3 +1249,21 @@
   background-color: var(--color-orange-grove, #E88C2B);
   border-radius: 9999px;
 }
+
+.openSongLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dark-muted, #8C7370);
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.openSongLink:hover {
+  color: var(--color-orange-grove, #E88C2B);
+  opacity: 1;
+  transform: scale(1.15);
+}
+

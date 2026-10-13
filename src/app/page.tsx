@@ -3,88 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Track, TRACKS_DATA } from "@/data/tracks";
 import styles from "./page.module.css";
 
-interface Track {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  duration: string;
-  dateAdded: string;
-  format: string;
-  rate: string;
-  genre: string;
-}
-
-const TRACKS_DATA: Track[] = [
-  {
-    id: 1,
-    title: "Round Midnight (Live Master Session)",
-    artist: "The Modern Acoustic Ensemble",
-    album: "Verve & Velvet: Analog Sessions",
-    duration: "05:42",
-    dateAdded: "2 days ago",
-    format: "FLAC",
-    rate: "192kHz / 24-bit",
-    genre: "Vinyl Classics",
-  },
-  {
-    id: 2,
-    title: "Symphony No. 5 in C Minor - Allegro con brio",
-    artist: "Vienna Philharmonic Orchestra",
-    album: "Beethoven: The Master Tapes",
-    duration: "07:18",
-    dateAdded: "1 week ago",
-    format: "DSD",
-    rate: "DSD128 Master",
-    genre: "Acoustic Masters",
-  },
-  {
-    id: 3,
-    title: "Celestial Architecture (Spatial Mix)",
-    artist: "Julianna Barwick & Eluvium",
-    album: "Acoustic Chambers Vol. II",
-    duration: "04:35",
-    dateAdded: "3 weeks ago",
-    format: "ATMOS",
-    rate: "96kHz / 24-bit",
-    genre: "Ambient & Spatial",
-  },
-  {
-    id: 4,
-    title: "Autumn in New York (Uncompressed Vinyl Rip)",
-    artist: "Chet Baker Quartet",
-    album: "Midnight Trumpet",
-    duration: "03:59",
-    dateAdded: "Aug 14, 2026",
-    format: "FLAC",
-    rate: "192kHz / 24-bit",
-    genre: "Vinyl Classics",
-  },
-  {
-    id: 5,
-    title: "Kind of Blue (Master Cut Take 2)",
-    artist: "Miles Davis Quintet",
-    album: "Columbia Master Archives",
-    duration: "09:22",
-    dateAdded: "Jul 28, 2026",
-    format: "FLAC",
-    rate: "192kHz / 24-bit",
-    genre: "Audiophile FLAC",
-  },
-  {
-    id: 6,
-    title: "Subterranean Harmonic Resonance",
-    artist: "Nils Frahm",
-    album: "Solo Piano in Solitude",
-    duration: "06:14",
-    dateAdded: "Jun 12, 2026",
-    format: "FLAC",
-    rate: "96kHz / 24-bit",
-    genre: "Acoustic Masters",
-  },
-];
 
 const SHELVES_DATA = [
   {
@@ -444,7 +365,26 @@ export default function HomePage() {
                       </td>
                       <td>
                         <div className={styles.trackTitleCell}>
-                          <span className={styles.trackTitleText}>{track.title}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <Link
+                              href={`/song/${track.id}`}
+                              className={styles.trackTitleText}
+                              onClick={(e) => e.stopPropagation()}
+                              title="Open dedicated song player"
+                            >
+                              {track.title}
+                            </Link>
+                            <Link
+                              href={`/song/${track.id}`}
+                              className={styles.openSongLink}
+                              onClick={(e) => e.stopPropagation()}
+                              title="Open Song View"
+                            >
+                              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </Link>
+                          </div>
                           <span className={styles.trackArtistText}>{track.artist}</span>
                         </div>
                       </td>
@@ -519,13 +459,23 @@ export default function HomePage() {
       <footer className={styles.bottomDock}>
         {/* Left: Track Info & Favorite Heart */}
         <div className={styles.dockLeft}>
-          <div className={styles.dockThumbnail}>
+          <Link
+            href={`/song/${currentTrack.id}`}
+            className={styles.dockThumbnail}
+            title="Open dedicated song player"
+          >
             <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
             </svg>
-          </div>
+          </Link>
           <div className={styles.dockTrackInfo}>
-            <span className={styles.dockTrackTitle}>{currentTrack.title}</span>
+            <Link
+              href={`/song/${currentTrack.id}`}
+              className={styles.dockTrackTitle}
+              title="Open dedicated song player"
+            >
+              {currentTrack.title}
+            </Link>
             <span className={styles.dockArtist}>{currentTrack.artist}</span>
           </div>
           <button
@@ -667,6 +617,18 @@ export default function HomePage() {
               style={{ width: `${volume}%` }}
             />
           </div>
+
+          {/* Fullscreen Expand to dedicated song page */}
+          <Link
+            href={`/song/${currentTrack.id}`}
+            className={styles.dockIconBtn}
+            title="Open Dedicated Song Player"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </Link>
         </div>
       </footer>
     </div>
