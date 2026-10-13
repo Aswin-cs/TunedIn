@@ -23,6 +23,13 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "TunedIn - Sound Sanctuary",
   description: "High-fidelity music streaming service crafted for audiophiles and creators.",
+  icons: {
+    icon: [
+      { url: "/music-logo-static.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/music-logo-static.svg",
+    apple: "/music-logo-static.svg",
+  },
 };
 
 export default function RootLayout({

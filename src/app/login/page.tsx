@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
@@ -31,19 +32,19 @@ export default function LoginPage() {
             className={styles.ring1}
             cx="500"
             cy="500"
-            r="220"
+            r="240"
             stroke="#E88C2B"
-            strokeWidth="1"
-            strokeDasharray="5 10"
+            strokeWidth="2"
+            strokeDasharray="6 10"
           />
           <circle
             className={styles.ring2}
             cx="500"
             cy="500"
-            r="400"
-            stroke="rgba(78, 4, 1, 0.15)"
-            strokeWidth="0.75"
-            strokeDasharray="4 8"
+            r="410"
+            stroke="#FFA73F"
+            strokeWidth="1.8"
+            strokeDasharray="5 9"
           />
         </svg>
       </div>
@@ -52,16 +53,17 @@ export default function LoginPage() {
       {/* TOP NAVIGATION HEADER                                          */}
       {/* ============================================================== */}
       <header className={styles.header}>
-        {/* Left: OCTAVE Brand + Live Equalizer Icon */}
+        {/* Left: Brand Logo + Identity */}
         <Link href="/" className={styles.brandLink}>
           <div className={styles.brandIconContainer}>
-            <div className={styles.soundwave}>
-              <div className={`${styles.waveBar} ${styles.waveBar1}`} />
-              <div className={`${styles.waveBar} ${styles.waveBar2}`} />
-              <div className={`${styles.waveBar} ${styles.waveBar3}`} />
-              <div className={`${styles.waveBar} ${styles.waveBar4}`} />
-              <div className={`${styles.waveBar} ${styles.waveBar5}`} />
-            </div>
+            <Image
+              src="/music-logo-orbit.svg"
+              alt="TunedIn Logo"
+              width={42}
+              height={42}
+              className={styles.brandLogoImage}
+              priority
+            />
           </div>
           <div className={styles.brandText}>
             <span className={styles.brandTitle}>TUNEDIN</span>
@@ -121,12 +123,12 @@ export default function LoginPage() {
                   {activeTab === "login" ? (
                     <>
                       Your sound, <br />
-                      your sanct<span className={styles.amberAccent}>uary.</span>
+                      your sanct<span className={styles.whiteAccent}>uary.</span>
                     </>
                   ) : (
                     <>
                       Join the realm, <br />
-                      pure sanct<span className={styles.amberAccent}>uary.</span>
+                      pure sanct<span className={styles.whiteAccent}>uary.</span>
                     </>
                   )}
                 </h1>

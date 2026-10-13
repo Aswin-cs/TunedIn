@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./page.module.css";
 
 interface Track {
@@ -177,12 +178,14 @@ export default function HomePage() {
           {/* Brand Header */}
           <Link href="/" className={styles.brandHeader}>
             <div className={styles.brandIcon}>
-              <div className={styles.soundwaveMini}>
-                <div className={styles.waveBar} />
-                <div className={styles.waveBar} />
-                <div className={styles.waveBar} />
-                <div className={styles.waveBar} />
-              </div>
+              <Image
+                src="/music-logo-orbit.svg"
+                alt="TunedIn Logo"
+                width={38}
+                height={38}
+                className={styles.brandLogoImage}
+                priority
+              />
             </div>
             <div className={styles.brandTitles}>
               <span className={styles.brandName}>TUNEDIN</span>
