@@ -134,6 +134,14 @@
   line-height: 1;
 }
 
+.brandTitleAccent {
+  background: linear-gradient(135deg, #e88c2b 0%, #4c2700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
 .brandTagline {
   font-family: var(--font-mono);
   font-size: 0.5625rem;

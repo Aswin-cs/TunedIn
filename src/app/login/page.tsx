@@ -66,7 +66,9 @@ export default function LoginPage() {
             />
           </div>
           <div className={styles.brandText}>
-            <span className={styles.brandTitle}>TUNEDIN</span>
+            <span className={styles.brandTitle}>
+              TUNED<span className={styles.brandTitleAccent}>IN</span>
+            </span>
             <span className={styles.brandSubtitle}>Architectural Acoustics</span>
           </div>
         </Link>
