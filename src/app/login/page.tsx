@@ -41,7 +41,7 @@ export default function LoginPage() {
             cx="500"
             cy="500"
             r="400"
-            stroke="#FEFBF3"
+            stroke="rgba(78, 4, 1, 0.15)"
             strokeWidth="0.75"
             strokeDasharray="4 8"
           />

@@ -81,6 +81,17 @@
   --font-body: var(--font-inter), 'Inter', sans-serif;
   --font-mono: var(--font-space-mono), monospace;
 
+  /* TunedIn Light Theme Tokens (Calming White #FEFBF3 Foundation from design.md) */
+  --bg-white-sanctuary: #FEFBF3;
+  --surface-white-card: #FFFFFF;
+  --surface-white-elevated: #F8F5EC;
+  --surface-white-subtle: #F0EBE0;
+  --border-light-subtle: rgba(78, 4, 1, 0.08);
+  --border-light-medium: rgba(78, 4, 1, 0.14);
+  --text-dark-primary: #160303;
+  --text-dark-secondary: #553E3C;
+  --text-dark-muted: #8C7370;
+
   /* Spacing Tokens from design.md */
   --gutter: 1.25rem;
   --gutter-desktop: 1.75rem;
@@ -105,7 +116,6 @@
 
 html {
   height: 100%;
-  color-scheme: dark;
 }
 
 html,
@@ -116,8 +126,8 @@ body {
 
 body {
   min-height: 100%;
-  background-color: var(--canvas-base);
-  color: var(--text-high);
+  background-color: var(--bg-white-sanctuary);
+  color: var(--text-dark-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
