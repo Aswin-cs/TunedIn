@@ -31,6 +31,9 @@
     </radialGradient>
   </defs>
 
+  <!-- background -->
+  <rect x="340" y="320" width="1300" height="1300" rx="160" fill="#ffffff"/>
+
   <!-- orbit ring (behind the mark) -->
   <circle cx="990" cy="970" r="580" fill="none" stroke="#e8832a" stroke-opacity=".28"
           stroke-width="3" stroke-dasharray="2 16" stroke-linecap="round"/>

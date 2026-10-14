@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   description: "High-fidelity music streaming service crafted for audiophiles and creators.",
   icons: {
     icon: [
-      { url: "/music-logo-static.svg", type: "image/svg+xml" },
+      { url: "/music-logo-static.svg?v=2", type: "image/svg+xml" },
     ],
-    shortcut: "/music-logo-static.svg",
-    apple: "/music-logo-static.svg",
+    shortcut: "/music-logo-static.svg?v=2",
+    apple: "/music-logo-static.svg?v=2",
   },
 };
 
