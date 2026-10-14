@@ -927,50 +927,6 @@
   flex-direction: column;
 }
 
-/* --- Synchronized Lyrics Panel --- */
-.lyricsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  max-height: 520px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-  scroll-behavior: smooth;
-}
-
-.lyricsContainer::-webkit-scrollbar {
-  width: 5px;
-}
-
-.lyricsContainer::-webkit-scrollbar-thumb {
-  background: rgba(232, 140, 43, 0.25);
-  border-radius: 9999px;
-}
-
-.lyricLine {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  font-weight: 500;
-  color: var(--text-muted, rgba(254, 251, 243, 0.35));
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  transition: all 0.25s ease;
-}
-
-.lyricLine:hover {
-  color: var(--text-high, #FEFBF3);
-  background: rgba(254, 251, 243, 0.04);
-}
-
-.lyricLineActive {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #FFA73F;
-  background: rgba(232, 140, 43, 0.12);
-  border-left: 3px solid #E88C2B;
-  transform: translateX(4px);
-}
 
 /* --- Acoustic Telemetry Panel --- */
 .telemetryGrid {

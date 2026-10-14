@@ -22,7 +22,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [activeTab, setActiveTab] = useState<"lyrics" | "telemetry" | "queue">("lyrics");
+  const [activeTab, setActiveTab] = useState<"telemetry" | "queue">("telemetry");
   const [toneEnabled, setToneEnabled] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -206,13 +206,6 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     }
   };
 
-  // Find active lyric line based on current playback time
-  const currentLyricIndex = currentTrack.lyrics.reduce((bestIndex, line, index) => {
-    if (currentTimeSec >= line.time) {
-      return index;
-    }
-    return bestIndex;
-  }, 0);
 
   const progressPercent = Math.min(
     100,
@@ -551,23 +544,11 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
         </section>
 
         {/* ============================================================ */}
-        {/* RIGHT COLUMN: LYRICS, TELEMETRY & QUEUE TABS                 */}
+        {/* RIGHT COLUMN: TELEMETRY & QUEUE TABS                         */}
         {/* ============================================================ */}
         <section className={styles.inspectorPane}>
           {/* Tabs Navigation */}
           <div className={styles.tabsNav} role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "lyrics"}
-              className={`${styles.tabBtn} ${activeTab === "lyrics" ? styles.tabBtnActive : ""}`}
-              onClick={() => setActiveTab("lyrics")}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-              <span>Synchronized Lyrics</span>
-            </button>
 
             <button
               type="button"
@@ -598,28 +579,6 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
 
           {/* Card Content Based on Active Tab */}
           <div className={styles.contentCard}>
-            {/* 1. Synchronized Lyrics Tab */}
-            {activeTab === "lyrics" && (
-              <div className={styles.lyricsContainer}>
-                {currentTrack.lyrics.map((line, idx) => {
-                  const isActive = idx === currentLyricIndex;
-                  return (
-                    <p
-                      key={idx}
-                      className={`${styles.lyricLine} ${isActive ? styles.lyricLineActive : ""}`}
-                      onClick={() => {
-                        setCurrentTimeSec(line.time);
-                        setIsPlaying(true);
-                        showToast(`Jumped to ${formatTime(line.time)}`);
-                      }}
-                      title={`Click to jump to ${formatTime(line.time)}`}
-                    >
-                      {line.text}
-                    </p>
-                  );
-                })}
-              </div>
-            )}
 
             {/* 2. Acoustic Telemetry Specs Tab */}
             {activeTab === "telemetry" && (
