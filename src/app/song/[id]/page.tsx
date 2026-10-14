@@ -7,6 +7,10 @@ interface SongPageProps {
   params: Promise<{ id: string }>;
 }
 
+export function generateStaticParams() {
+  return TRACKS_DATA.map((t) => ({ id: t.id.toString() }));
+}
+
 export async function generateMetadata({
   params,
 }: SongPageProps): Promise<Metadata> {
