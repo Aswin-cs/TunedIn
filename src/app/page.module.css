@@ -377,7 +377,49 @@
 .topBarActions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.profileBadgeLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  text-decoration: none;
+  color: #1C120C;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.profileBadgeLink:hover {
+  border-color: rgba(217, 119, 6, 0.4);
+  background: rgba(217, 119, 6, 0.05);
+  color: #D97706;
+  transform: translateY(-1px);
+}
+
+.avatarMini {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #F59E0B 0%, #D97706 70%, #92400E 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3);
+}
+
+.profileNameMini {
+  color: #1C120C;
+  font-weight: 700;
 }
 
 .authButton {

@@ -16,6 +16,25 @@ export interface TelemetrySpecs {
   linerNotes: string;
 }
 
+export interface TrackTheme {
+  name: string;
+  accent: string;
+  accentHover: string;
+  accentGlow: string;
+  accentSubtle: string;
+  ambientTop: string;
+  ambientBottom: string;
+  canvas: string;
+  surfaceGlass: string;
+  cardBg: string;
+  vinylLabel: string;
+  vinylBorder: string;
+  highlightText: string;
+  textHigh: string;
+  textMedium: string;
+  textMuted: string;
+}
+
 export interface Track {
   id: number;
   title: string;
@@ -33,6 +52,7 @@ export interface Track {
   vibe: string;
   lyrics: LyricLine[];
   telemetry: TelemetrySpecs;
+  theme?: TrackTheme;
 }
 
 export const TRACKS_DATA: Track[] = [
@@ -48,9 +68,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "192kHz / 24-bit",
     genre: "Vinyl Classics",
     releaseYear: "2026",
-    coverAccent: "#E88C2B",
-    coverSecondary: "#4E0401",
+    coverAccent: "#D97706",
+    coverSecondary: "#FAF8F5",
     vibe: "Warm Analog & Smoke",
+    theme: {
+      name: "Warm Amber & Honey Ivory",
+      accent: "#D97706",
+      accentHover: "#B45309",
+      accentGlow: "rgba(217, 119, 6, 0.28)",
+      accentSubtle: "rgba(217, 119, 6, 0.10)",
+      ambientTop: "rgba(245, 158, 11, 0.18)",
+      ambientBottom: "rgba(232, 140, 43, 0.10)",
+      canvas: "#FAF8F5",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 244, 237, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #F59E0B 0%, #D97706 60%, #92400E 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#B45309",
+      textHigh: "#1C120C",
+      textMedium: "#5C4A42",
+      textMuted: "#8C776D",
+    },
     lyrics: [
       { time: 0, text: "♪ [Instrumental opening: Warm double bass and brushed snare] ♪" },
       { time: 14, text: "It begins to tell, 'round midnight, 'round midnight" },
@@ -91,9 +129,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "DSD128 Master",
     genre: "Acoustic Masters",
     releaseYear: "2025",
-    coverAccent: "#FFA73F",
-    coverSecondary: "#2B0B0A",
+    coverAccent: "#DC2626",
+    coverSecondary: "#FDF8F7",
     vibe: "Orchestral Thunder",
+    theme: {
+      name: "Rose Alabaster & Crimson",
+      accent: "#DC2626",
+      accentHover: "#991B1B",
+      accentGlow: "rgba(220, 38, 38, 0.25)",
+      accentSubtle: "rgba(220, 38, 38, 0.08)",
+      ambientTop: "rgba(239, 68, 68, 0.15)",
+      ambientBottom: "rgba(254, 202, 202, 0.35)",
+      canvas: "#FDF8F7",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(253, 242, 242, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #EF4444 0%, #DC2626 60%, #991B1B 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#991B1B",
+      textHigh: "#1E0C0C",
+      textMedium: "#5E4040",
+      textMuted: "#8F6E6E",
+    },
     lyrics: [
       { time: 0, text: "♪ [Fate motif: Da-da-da-DUM in monumental fortissimo] ♪" },
       { time: 22, text: "♪ [Echoing horn passages across Golden Hall acoustic canopy] ♪" },
@@ -128,9 +184,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "96kHz / 24-bit",
     genre: "Ambient & Spatial",
     releaseYear: "2026",
-    coverAccent: "#F4816E",
-    coverSecondary: "#1E0808",
+    coverAccent: "#0891B2",
+    coverSecondary: "#F4F9FA",
     vibe: "Ethereal Sanctuary",
+    theme: {
+      name: "Crystal Cloud & Aurora Teal",
+      accent: "#0891B2",
+      accentHover: "#0E7490",
+      accentGlow: "rgba(8, 145, 178, 0.25)",
+      accentSubtle: "rgba(8, 145, 178, 0.08)",
+      ambientTop: "rgba(6, 182, 212, 0.16)",
+      ambientBottom: "rgba(207, 250, 254, 0.40)",
+      canvas: "#F4F9FA",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(236, 254, 255, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #06B6D4 0%, #0891B2 60%, #164E63 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#0E7490",
+      textHigh: "#08171E",
+      textMedium: "#3E535E",
+      textMuted: "#6C8592",
+    },
     lyrics: [
       { time: 0, text: "♪ [Lush looped vocal harmonies ascending in harmonic intervals] ♪" },
       { time: 30, text: "Floating through the cathedral arches..." },
@@ -165,9 +239,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "192kHz / 24-bit",
     genre: "Vinyl Classics",
     releaseYear: "2024",
-    coverAccent: "#E88C2B",
-    coverSecondary: "#301515",
+    coverAccent: "#EA580C",
+    coverSecondary: "#FAF6F2",
     vibe: "Cool Jazz Melancholy",
+    theme: {
+      name: "Sunlit Ochre & Peach Linen",
+      accent: "#EA580C",
+      accentHover: "#C2410C",
+      accentGlow: "rgba(234, 88, 12, 0.25)",
+      accentSubtle: "rgba(234, 88, 12, 0.08)",
+      ambientTop: "rgba(251, 146, 60, 0.16)",
+      ambientBottom: "rgba(255, 237, 213, 0.40)",
+      canvas: "#FAF6F2",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 247, 237, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #FB923C 0%, #EA580C 60%, #9A3412 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#C2410C",
+      textHigh: "#1E100A",
+      textMedium: "#5E453B",
+      textMuted: "#8E7469",
+    },
     lyrics: [
       { time: 0, text: "♪ [Subtle vinyl needle drop and soft brushed cymbals] ♪" },
       { time: 15, text: "Autumn in New York, why does it seem so inviting?" },
@@ -203,9 +295,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "192kHz / 24-bit",
     genre: "Audiophile FLAC",
     releaseYear: "2026",
-    coverAccent: "#FFA73F",
-    coverSecondary: "#240909",
+    coverAccent: "#0284C7",
+    coverSecondary: "#F3F7FA",
     vibe: "Modal Jazz Icon",
+    theme: {
+      name: "Crisp Sky & Cobalt Note",
+      accent: "#0284C7",
+      accentHover: "#0369A1",
+      accentGlow: "rgba(2, 132, 199, 0.25)",
+      accentSubtle: "rgba(2, 132, 199, 0.08)",
+      ambientTop: "rgba(56, 189, 248, 0.16)",
+      ambientBottom: "rgba(224, 242, 254, 0.40)",
+      canvas: "#F3F7FA",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 249, 255, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #38BDF8 0%, #0284C7 60%, #075985 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#0369A1",
+      textHigh: "#08141E",
+      textMedium: "#3E4E5E",
+      textMuted: "#6C8092",
+    },
     lyrics: [
       { time: 0, text: "♪ [Bill Evans subtle piano chords & Paul Chambers bass motif] ♪" },
       { time: 35, text: "♪ [Miles Davis harmon-muted trumpet enters - iconic modal opening] ♪" },
@@ -240,9 +350,27 @@ export const TRACKS_DATA: Track[] = [
     rate: "96kHz / 24-bit",
     genre: "Acoustic Masters",
     releaseYear: "2025",
-    coverAccent: "#FFB778",
-    coverSecondary: "#2A0D0D",
+    coverAccent: "#059669",
+    coverSecondary: "#F3F9F6",
     vibe: "Intimate Piano Felt",
+    theme: {
+      name: "Sage Mist & Nordic Pine",
+      accent: "#059669",
+      accentHover: "#047857",
+      accentGlow: "rgba(5, 150, 105, 0.25)",
+      accentSubtle: "rgba(5, 150, 105, 0.08)",
+      ambientTop: "rgba(16, 185, 129, 0.16)",
+      ambientBottom: "rgba(209, 250, 229, 0.40)",
+      canvas: "#F3F9F6",
+      surfaceGlass: "rgba(255, 255, 255, 0.90)",
+      cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(236, 253, 245, 0.88) 100%)",
+      vinylLabel: "radial-gradient(circle, #10B981 0%, #059669 60%, #064E3B 100%)",
+      vinylBorder: "#FFFFFF",
+      highlightText: "#047857",
+      textHigh: "#081A12",
+      textMedium: "#3D5449",
+      textMuted: "#6C867B",
+    },
     lyrics: [
       { time: 0, text: "♪ [Upright felt piano hammer thumps & foot pedal creaks] ♪" },
       { time: 30, text: "♪ [Gentle repeating arpeggios reverberating through Saal 3] ♪" },
@@ -265,3 +393,4 @@ export const TRACKS_DATA: Track[] = [
     },
   },
 ];
+

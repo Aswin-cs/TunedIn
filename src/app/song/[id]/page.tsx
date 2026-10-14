@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { TRACKS_DATA, Track } from "@/data/tracks";
 import SongPlayerClient from "./SongPlayerClient";
-
+import styles from "./song.module.css";
 
 interface SongPageProps {
   params: Promise<{ id: string }>;
@@ -28,15 +29,22 @@ export async function generateMetadata({
   };
 }
 
-export default async function SongPage({ params }: SongPageProps) {
+async function SongContent({ params }: SongPageProps) {
   const { id } = await params;
   const numericId = parseInt(id, 10);
 
   // Find corresponding track or fallback to first
   const track: Track | undefined = TRACKS_DATA.find((t) => t.id === numericId);
-
-  // If not found in numeric id, check if default track or 404
   const selectedTrack = track || TRACKS_DATA[0];
 
   return <SongPlayerClient initialTrack={selectedTrack} />;
 }
+
+export default function SongPage({ params }: SongPageProps) {
+  return (
+    <Suspense fallback={<div className={styles.pageContainer} />}>
+      <SongContent params={params} />
+    </Suspense>
+  );
+}
+

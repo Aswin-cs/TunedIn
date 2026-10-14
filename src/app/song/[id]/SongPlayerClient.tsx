@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -22,14 +22,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [activeTab, setActiveTab] = useState<"telemetry" | "queue">("telemetry");
-  const [toneEnabled, setToneEnabled] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Web Audio API context reference for warm analog synthesis
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const oscNodesRef = useRef<OscillatorNode[]>([]);
 
   // Adjust state during render when initialTrack prop changes (e.g., URL navigation)
   const [prevTrackId, setPrevTrackId] = useState<number>(initialTrack.id);
@@ -57,84 +50,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     return () => clearInterval(interval);
   }, [isPlaying, currentTrack.durationSeconds, playbackSpeed, isRepeat]);
 
-  // Web Audio synthesizer handling
-  useEffect(() => {
-    if (!toneEnabled || !isPlaying) {
-      // Stop oscillators
-      oscNodesRef.current.forEach((osc) => {
-        try {
-          osc.stop();
-          osc.disconnect();
-        } catch {}
-      });
-      oscNodesRef.current = [];
-      return;
-    }
 
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioCtx();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") {
-        ctx.resume();
-      }
-
-      const masterGain = ctx.createGain();
-      const currentVol = isMuted ? 0 : (volume / 100) * 0.15;
-      masterGain.gain.setValueAtTime(currentVol, ctx.currentTime);
-      masterGain.connect(ctx.destination);
-      gainNodeRef.current = masterGain;
-
-      // Base chord based on track id
-      const chords = [
-        [220, 261.63, 329.63, 392.0], // A minor 7
-        [130.81, 155.56, 196.0, 246.94], // C minor 7
-        [174.61, 220.0, 261.63, 329.63], // F maj7
-        [146.83, 174.61, 220.0, 261.63], // D minor 7
-        [196.0, 246.94, 293.66, 349.23], // G dominant 7
-        [164.81, 196.0, 246.94, 293.66], // E minor 7
-      ];
-      const selectedChord = chords[(currentTrack.id - 1) % chords.length];
-
-      const newOscs: OscillatorNode[] = [];
-      selectedChord.forEach((freq) => {
-        const osc = ctx.createOscillator();
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(800, ctx.currentTime);
-
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        osc.connect(filter);
-        filter.connect(masterGain);
-        osc.start();
-        newOscs.push(osc);
-      });
-      oscNodesRef.current = newOscs;
-    } catch {
-      // AudioContext may be restricted by browser policy before user gesture
-    }
-
-    return () => {
-      oscNodesRef.current.forEach((osc) => {
-        try {
-          osc.stop();
-          osc.disconnect();
-        } catch {}
-      });
-      oscNodesRef.current = [];
-    };
-  }, [toneEnabled, isPlaying, currentTrack.id, volume, isMuted]);
-
-  // Adjust volume on existing gain node
-  useEffect(() => {
-    if (gainNodeRef.current && audioCtxRef.current) {
-      const targetVol = isMuted ? 0 : (volume / 100) * 0.15;
-      gainNodeRef.current.gain.setTargetAtTime(targetVol, audioCtxRef.current.currentTime, 0.05);
-    }
-  }, [volume, isMuted]);
 
   // Format seconds into MM:SS
   const formatTime = (secs: number) => {
@@ -212,16 +128,50 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     (currentTimeSec / (currentTrack.durationSeconds || 1)) * 100
   );
 
+  const currentTheme = currentTrack.theme || {
+    name: "Warm Amber & Honey Ivory",
+    accent: "#D97706",
+    accentHover: "#B45309",
+    accentGlow: "rgba(217, 119, 6, 0.28)",
+    accentSubtle: "rgba(217, 119, 6, 0.10)",
+    ambientTop: "rgba(245, 158, 11, 0.18)",
+    ambientBottom: "rgba(232, 140, 43, 0.10)",
+    canvas: "#FAF8F5",
+    surfaceGlass: "rgba(255, 255, 255, 0.90)",
+    cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 244, 237, 0.88) 100%)",
+    vinylLabel: "radial-gradient(circle, #F59E0B 0%, #D97706 60%, #92400E 100%)",
+    vinylBorder: "#FFFFFF",
+    highlightText: "#B45309",
+    textHigh: "#1C120C",
+    textMedium: "#5C4A42",
+    textMuted: "#8C776D",
+  };
+
+  const dynamicThemeStyles = {
+    "--theme-accent": currentTheme.accent,
+    "--theme-accent-hover": currentTheme.accentHover,
+    "--theme-accent-glow": currentTheme.accentGlow,
+    "--theme-accent-subtle": currentTheme.accentSubtle,
+    "--theme-ambient-top": currentTheme.ambientTop,
+    "--theme-ambient-bottom": currentTheme.ambientBottom,
+    "--theme-canvas": currentTheme.canvas,
+    "--theme-surface-glass": currentTheme.surfaceGlass,
+    "--theme-card-bg": currentTheme.cardBg,
+    "--theme-vinyl-label": currentTheme.vinylLabel,
+    "--theme-vinyl-border": currentTheme.vinylBorder,
+    "--theme-highlight-text": currentTheme.highlightText,
+    "--theme-text-high": currentTheme.textHigh,
+    "--theme-text-medium": currentTheme.textMedium,
+    "--theme-text-muted": currentTheme.textMuted,
+  } as React.CSSProperties;
+
   return (
-    <div className={styles.pageContainer}>
+    <div className={styles.pageContainer} style={dynamicThemeStyles}>
       {/* ============================================================== */}
       {/* 1. ATMOSPHERIC AMBIENT BACKDROP                                */}
       {/* ============================================================== */}
       <div className={styles.ambientBackdrop} aria-hidden="true">
-        <div
-          className={styles.ambientGlowPrimary}
-          style={{ background: `radial-gradient(circle, ${currentTrack.coverAccent}28 0%, rgba(78, 4, 1, 0.4) 50%, transparent 75%)` }}
-        />
+        <div className={styles.ambientGlowPrimary} />
         <div className={styles.ambientGlowSecondary} />
       </div>
 
@@ -253,6 +203,10 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
         </div>
 
         <div className={styles.topHeaderCenter}>
+          <div className={styles.themeMoodBadge}>
+            <div className={styles.themeMoodDot} />
+            <span>MOOD • {currentTheme.name}</span>
+          </div>
           <div className={styles.badgeLiveSession}>
             <div className={styles.liveDot} />
             <span>DIRECT STREAM • {currentTrack.rate}</span>
@@ -270,7 +224,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
             title={isLiked ? "Remove Favorite" : "Save to Favorites"}
             aria-label="Toggle favorite"
           >
-            <svg width="18" height="18" fill={isLiked ? "#E88C2B" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+            <svg width="18" height="18" fill={isLiked ? currentTheme.accent : "none"} viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
@@ -286,6 +240,12 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
           </button>
+
+          <Link href="/profile" className={styles.actionIconBtn} title="My Acoustic Profile" aria-label="My Acoustic Profile">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </Link>
         </div>
       </header>
 
@@ -346,19 +306,13 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
 
           {/* Track Metadata Header */}
           <div className={styles.trackMetadataSection}>
-            <div className={styles.trackFormatPills}>
-              <span className={styles.formatBadge}>{currentTrack.format}</span>
-              <span className={styles.formatBadge}>{currentTrack.rate}</span>
-              <span className={styles.genreBadge}>{currentTrack.genre}</span>
-              <span className={styles.vibeBadge}>{currentTrack.vibe}</span>
-            </div>
             <h1 className={styles.songTitle}>{currentTrack.title}</h1>
             <div className={styles.artistRow}>
               <span className={styles.artistName}>{currentTrack.artist}</span>
               <span className={styles.metaDot}>•</span>
               <span className={styles.albumName}>{currentTrack.album}</span>
               <span className={styles.metaDot}>•</span>
-              <span>{currentTrack.releaseYear}</span>
+              <span className={styles.releaseYear}>{currentTrack.releaseYear}</span>
             </div>
           </div>
 
@@ -390,9 +344,8 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
           </div>
 
           {/* Primary Transport Controls */}
-          <div className={styles.transportRow}>
-            {/* Auxiliary Tools: Shuffle, Repeat */}
-            <div className={styles.transportCenter}>
+          <div className={styles.transportSection}>
+            <div className={styles.transportMain}>
               <button
                 type="button"
                 className={`${styles.transportIconBtn} ${isShuffle ? styles.transportIconBtnActive : ""}`}
@@ -403,7 +356,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title={isShuffle ? "Disable Shuffle" : "Enable Shuffle"}
                 aria-label="Shuffle"
               >
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H4m0 0l4 4m-4-4l4-4m8 0h4m0 0l-4-4m4 4l-4 4" />
                 </svg>
                 {isShuffle && <span className={styles.activeIndicatorPip} />}
@@ -430,11 +383,11 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 aria-label={isPlaying ? "Pause Track" : "Play Track"}
               >
                 {isPlaying ? (
-                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                   </svg>
                 ) : (
-                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
@@ -462,15 +415,15 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title={isRepeat ? "Disable Repeat" : "Enable Repeat"}
                 aria-label="Repeat"
               >
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {isRepeat && <span className={styles.activeIndicatorPip} />}
               </button>
             </div>
 
-            {/* Aux Controls: Volume & Playback Speed */}
-            <div className={styles.auxControlsGroup}>
+            {/* Bottom Secondary Utility Controls: Speed & Volume */}
+            <div className={styles.auxControlsRow}>
               <button
                 type="button"
                 className={styles.speedSelector}
@@ -483,7 +436,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               <div className={styles.volumeContainer}>
                 <button
                   type="button"
-                  className={styles.transportIconBtn}
+                  className={styles.volumeIconBtn}
                   onClick={() => setIsMuted(!isMuted)}
                   title={isMuted ? "Unmute" : "Mute"}
                   aria-label="Mute toggle"
@@ -513,168 +466,22 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                     className={styles.volumeFill}
                     style={{ width: `${isMuted ? 0 : volume}%` }}
                   />
+                  <div
+                    className={styles.volumeThumb}
+                    style={{ left: `${isMuted ? 0 : volume}%` }}
+                  />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Real Audio Synthesizer Toggle */}
-          <div className={styles.audioToneBar}>
-            <div className={styles.toneInfo}>
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#E88C2B">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-              <span>Audiophile Ambient Tone Synth (Live Web Audio)</span>
-            </div>
-            <button
-              type="button"
-              className={`${styles.toneSwitchBtn} ${toneEnabled ? styles.toneSwitchBtnActive : ""}`}
-              onClick={() => {
-                setToneEnabled(!toneEnabled);
-                showToast(
-                  !toneEnabled
-                    ? "Warm analog chords generator enabled"
-                    : "Tone generator muted"
-                );
-              }}
-            >
-              {toneEnabled ? "SYNTH ON" : "TRY LIVE SOUND"}
-            </button>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* RIGHT COLUMN: TELEMETRY & QUEUE TABS                         */}
-        {/* ============================================================ */}
-        <section className={styles.inspectorPane}>
-          {/* Tabs Navigation */}
-          <div className={styles.tabsNav} role="tablist">
-
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "telemetry"}
-              className={`${styles.tabBtn} ${activeTab === "telemetry" ? styles.tabBtnActive : ""}`}
-              onClick={() => setActiveTab("telemetry")}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span>Acoustic Telemetry</span>
-            </button>
-
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "queue"}
-              className={`${styles.tabBtn} ${activeTab === "queue" ? styles.tabBtnActive : ""}`}
-              onClick={() => setActiveTab("queue")}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <span>Archive Queue</span>
-            </button>
-          </div>
-
-          {/* Card Content Based on Active Tab */}
-          <div className={styles.contentCard}>
-
-            {/* 2. Acoustic Telemetry Specs Tab */}
-            {activeTab === "telemetry" && (
-              <div>
-                <div className={styles.telemetryGrid}>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Sample Rate</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.sampleRate}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Bit Depth</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.bitDepth}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Dynamic Range</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.dynamicRange}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Audio Codec</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.codec}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Channels</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.channels}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Tape Machine</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.tapeMachine}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Microphones</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.microphones}</div>
-                  </div>
-                  <div className={styles.telemetryTile}>
-                    <div className={styles.tileLabel}>Master Engineer</div>
-                    <div className={styles.tileValue}>{currentTrack.telemetry.masterEngineer}</div>
-                  </div>
-                </div>
-
-                <div className={styles.linerNotesBox}>
-                  <div className={styles.tileLabel} style={{ marginBottom: "0.5rem" }}>
-                    Archival Liner Notes &amp; Studio Acoustics
-                  </div>
-                  <p className={styles.linerNotesText}>
-                    &ldquo;{currentTrack.telemetry.linerNotes}&rdquo;
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* 3. Archive Queue Tab */}
-            {activeTab === "queue" && (
-              <div className={styles.queueList}>
-                {TRACKS_DATA.map((item, idx) => {
-                  const isCurrent = item.id === currentTrack.id;
-                  return (
-                    <div
-                      key={item.id}
-                      className={`${styles.queueItem} ${isCurrent ? styles.queueItemActive : ""}`}
-                      onClick={() => handleSelectTrack(item)}
-                    >
-                      <div className={styles.queueItemLeft}>
-                        <span className={styles.queueIndex}>{idx + 1}</span>
-                        <div
-                          className={styles.queueThumb}
-                          style={{
-                            background: `radial-gradient(circle, ${item.coverAccent} 0%, #160505 100%)`,
-                          }}
-                        >
-                          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                          </svg>
-                        </div>
-                        <div className={styles.queueInfo}>
-                          <div className={styles.queueTitle}>{item.title}</div>
-                          <div className={styles.queueArtist}>{item.artist}</div>
-                        </div>
-                      </div>
-
-                      <div className={styles.queueRight}>
-                        <span className={styles.queueFormat}>{item.format}</span>
-                        <span className={styles.queueDuration}>{item.duration}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </section>
       </main>
 
       {/* Toast Notification */}
       {toastMessage && (
         <div className={styles.toast} role="status">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#E88C2B">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={currentTheme.accent}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>{toastMessage}</span>
