@@ -1379,3 +1379,160 @@
   transform: scale(1.15);
 }
 
+/* ============================================================== */
+/* 5. DYNAMIC MONGODB SONG DETAILS & POSTER STYLES                 */
+/* ============================================================== */
+
+.trackCoverThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #220D0D;
+  box-shadow: 0 4px 10px rgba(78, 4, 1, 0.12);
+  flex-shrink: 0;
+}
+
+.trackCoverPlaceholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4E0401, #220D0D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFA73F;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(78, 4, 1, 0.12);
+}
+
+.inspectorCoverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow: 0 12px 28px -4px rgba(78, 4, 1, 0.2);
+}
+
+.dockCoverThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.verifiedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.verifiedPillTrue {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.verifiedPillPending {
+  background-color: rgba(232, 140, 43, 0.12);
+  color: #D97706;
+  border: 1px solid rgba(232, 140, 43, 0.25);
+}
+
+.dbBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(232, 140, 43, 0.1);
+  border: 1px solid rgba(232, 140, 43, 0.25);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-orange-grove, #E88C2B);
+}
+
+.dbDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10B981;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.aiObservationCard {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light-subtle, rgba(78, 4, 1, 0.08));
+  border-radius: var(--radius-md, 0.75rem);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.aiObsHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-orange-grove, #E88C2B);
+}
+
+.aiObsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aiObsRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.aiObsKey {
+  font-family: var(--font-mono);
+  color: var(--text-dark-muted, #8C7370);
+  text-transform: uppercase;
+}
+
+.aiObsVal {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-dark-primary, #160303);
+}
+
+.cardPosterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.mediaCard:hover .cardPosterImage {
+  transform: scale(1.06);
+}
+
+.heroPosterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
+}
+
+

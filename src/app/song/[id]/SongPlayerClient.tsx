@@ -28,7 +28,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   const [playerAvatarFailed, setPlayerAvatarFailed] = useState<boolean>(false);
 
   // Adjust state during render when initialTrack prop changes (e.g., URL navigation)
-  const [prevTrackId, setPrevTrackId] = useState<number>(initialTrack.id);
+  const [prevTrackId, setPrevTrackId] = useState<number | string>(initialTrack.id);
   if (initialTrack.id !== prevTrackId) {
     setPrevTrackId(initialTrack.id);
     setCurrentTrack(initialTrack);

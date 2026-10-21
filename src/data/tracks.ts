@@ -36,7 +36,8 @@ export interface TrackTheme {
 }
 
 export interface Track {
-  id: number;
+  id: number | string;
+  _id?: string;
   title: string;
   artist: string;
   album: string;
@@ -53,6 +54,16 @@ export interface Track {
   lyrics: LyricLine[];
   telemetry: TelemetrySpecs;
   theme?: TrackTheme;
+  poster_url?: string;
+  poster_Id?: string;
+  audio_url?: string;
+  audio_Id?: string;
+  verified?: boolean;
+  verificationStatus?: string;
+  plays?: number;
+  likes?: number;
+  aiObservation?: Record<string, unknown>;
+  uploadUser?: unknown;
 }
 
 export const TRACKS_DATA: Track[] = [

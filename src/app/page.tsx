@@ -1,51 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { Track, TRACKS_DATA } from "@/data/tracks";
+import { ISong } from "@/models/song.model";
+import { mapSongToTrack } from "@/lib/songAdapter";
 import styles from "./page.module.css";
-
-
-const SHELVES_DATA = [
-  {
-    id: "s1",
-    title: "Verve & Velvet: Analog Sessions",
-    artist: "The Modern Acoustic Ensemble",
-    format: "HI-RES FLAC • 24/192",
-    tag: "Master Tape",
-  },
-  {
-    id: "s2",
-    title: "Late Night Vinyl Chambers",
-    artist: "Tokyo String Trio",
-    format: "DSD64 STEREO",
-    tag: "Audiophile",
-  },
-  {
-    id: "s3",
-    title: "Spatial Acoustic Horizon",
-    artist: "Max Richter Orchestra",
-    format: "DOLBY ATMOS",
-    tag: "Studio Pure",
-  },
-  {
-    id: "s4",
-    title: "Blue Note Heritage Cut",
-    artist: "Herbie Hancock & Wayne Shorter",
-    format: "FLAC 192kHz",
-    tag: "Master Reissue",
-  },
-];
 
 export default function HomePage() {
   const { data: session, status } = useSession();
+
+  // Songs fetched from MongoDB (song.model.ts)
+  const [dbSongs, setDbSongs] = useState<Track[]>([]);
+  const [isLoadingSongs, setIsLoadingSongs] = useState<boolean>(true);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  // Playback state
   const [currentTrack, setCurrentTrack] = useState<Track>(TRACKS_DATA[0]);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [progress, setProgress] = useState<number>(34); // %
-  const [volume, setVolume] = useState<number>(78);
-  const [isLiked, setIsLiked] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0); // 0-100%
+  const [volume, setVolume] = useState<number>(80);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [navAvatarFailed, setNavAvatarFailed] = useState<boolean>(false);
@@ -53,47 +32,208 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeNav, setActiveNav] = useState<string>("home");
 
-  // Simulated live playback tick
+  // Audio HTML element ref
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // 1. Fetch songs and their details from /api/songs (models/song.model.ts)
   useEffect(() => {
-    if (!isPlaying) return;
+    let isMounted = true;
+
+    async function fetchSongs() {
+      try {
+        setIsLoadingSongs(true);
+        const res = await fetch("/api/songs");
+        if (!res.ok) {
+          throw new Error(`Failed to fetch songs: status ${res.status}`);
+        }
+        const data = await res.json();
+        if (data.success && Array.isArray(data.songs) && isMounted) {
+          const mappedTracks: Track[] = data.songs.map((s: ISong) =>
+            mapSongToTrack(s)
+          );
+          setDbSongs(mappedTracks);
+          if (mappedTracks.length > 0) {
+            setCurrentTrack(mappedTracks[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching songs from MongoDB:", err);
+        if (isMounted) {
+          setDbError(err instanceof Error ? err.message : "Error fetching songs");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSongs(false);
+        }
+      }
+    }
+
+    fetchSongs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Combine DB songs with static audiophile masters (DB songs first!)
+  const combinedTracks = useMemo(() => {
+    if (dbSongs.length === 0) return TRACKS_DATA;
+    // Put MongoDB songs first, followed by curated tracks that don't clash by ID
+    return [...dbSongs, ...TRACKS_DATA];
+  }, [dbSongs]);
+
+  // Extract all unique genres for filter chips
+  const dynamicChips = useMemo(() => {
+    const genresSet = new Set<string>(["All"]);
+    // Add genres from DB songs
+    dbSongs.forEach((t) => {
+      if (t.genre) {
+        t.genre.split(" • ").forEach((g) => {
+          if (g.trim()) genresSet.add(g.trim());
+        });
+      }
+    });
+    // Add default genres
+    genresSet.add("Vinyl Classics");
+    genresSet.add("Acoustic Masters");
+    genresSet.add("Audiophile FLAC");
+    genresSet.add("Ambient & Spatial");
+    return Array.from(genresSet).slice(0, 8);
+  }, [dbSongs]);
+
+  // Filtered tracks based on search query and active genre chip
+  const filteredTracks = useMemo(() => {
+    return combinedTracks.filter((track) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        track.title.toLowerCase().includes(q) ||
+        track.artist.toLowerCase().includes(q) ||
+        track.album.toLowerCase().includes(q);
+
+      const matchesChip =
+        activeChip === "All" ||
+        track.genre.toLowerCase().includes(activeChip.toLowerCase());
+
+      return matchesSearch && matchesChip;
+    });
+  }, [combinedTracks, searchQuery, activeChip]);
+
+  // Audio element event listeners & sync
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (currentTrack.audio_url) {
+      if (audio.src !== currentTrack.audio_url) {
+        audio.src = currentTrack.audio_url;
+        audio.load();
+      }
+      if (isPlaying) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+    } else {
+      audio.pause();
+    }
+  }, [currentTrack, isPlaying]);
+
+  // Volume & Mute handling on <audio>
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
+    }
+  }, [volume, isMuted]);
+
+  // Fallback ticker for tracks without real audio_url
+  useEffect(() => {
+    if (!isPlaying || currentTrack.audio_url) return;
     const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 0 : prev + 0.5));
+      setProgress((prev) => {
+        if (prev >= 100) {
+          if (isRepeat) return 0;
+          return 100;
+        }
+        return prev + 0.5;
+      });
+      setCurrentTimeSec((prev) =>
+        prev >= currentTrack.durationSeconds ? 0 : prev + 1
+      );
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, currentTrack, isRepeat]);
 
-  const filteredTracks = TRACKS_DATA.filter((track) => {
-    const matchesSearch =
-      track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      track.album.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesChip =
-      activeChip === "All" || track.genre === activeChip;
-
-    return matchesSearch && matchesChip;
-  });
-
+  // Track select handler
   const handleTrackSelect = (track: Track) => {
     setCurrentTrack(track);
     setIsPlaying(true);
     setProgress(0);
+    setCurrentTimeSec(0);
+    if (audioRef.current && track.audio_url) {
+      audioRef.current.src = track.audio_url;
+      audioRef.current.play().catch(() => {});
+    }
   };
 
   const handleNextTrack = () => {
-    const currentIndex = TRACKS_DATA.findIndex((t) => t.id === currentTrack.id);
-    const nextIndex = (currentIndex + 1) % TRACKS_DATA.length;
-    handleTrackSelect(TRACKS_DATA[nextIndex]);
+    const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
+    let nextIndex = (currentIndex + 1) % filteredTracks.length;
+    if (isShuffle) {
+      nextIndex = Math.floor(Math.random() * filteredTracks.length);
+    }
+    handleTrackSelect(filteredTracks[nextIndex]);
   };
 
   const handlePrevTrack = () => {
-    const currentIndex = TRACKS_DATA.findIndex((t) => t.id === currentTrack.id);
-    const prevIndex = (currentIndex - 1 + TRACKS_DATA.length) % TRACKS_DATA.length;
-    handleTrackSelect(TRACKS_DATA[prevIndex]);
+    const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
+    const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
+    handleTrackSelect(filteredTracks[prevIndex]);
+  };
+
+  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const targetProgress = ratio * 100;
+    setProgress(targetProgress);
+
+    const targetSeconds = Math.round(ratio * (currentTrack.durationSeconds || 180));
+    setCurrentTimeSec(targetSeconds);
+
+    if (audioRef.current && currentTrack.audio_url && audioRef.current.duration) {
+      audioRef.current.currentTime = ratio * audioRef.current.duration;
+    }
+  };
+
+  const formatSeconds = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className={styles.appContainer}>
+      {/* Hidden real audio element for direct Cloudinary MP3/FLAC streaming */}
+      <audio
+        ref={audioRef}
+        onTimeUpdate={() => {
+          if (audioRef.current && audioRef.current.duration) {
+            const current = audioRef.current.currentTime;
+            const dur = audioRef.current.duration;
+            setCurrentTimeSec(Math.floor(current));
+            setProgress((current / dur) * 100);
+          }
+        }}
+        onEnded={() => {
+          if (isRepeat && audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+          } else {
+            handleNextTrack();
+          }
+        }}
+      />
+
       <div className={styles.studioLayout}>
         {/* ============================================================== */}
         {/* 1. LEFT COLUMN: PRIMARY NAVIGATION & LIBRARY HUB               */}
@@ -158,13 +298,17 @@ export default function HomePage() {
 
           {/* Library Section */}
           <div className={styles.navSection}>
-            <span className={styles.navLabel}>Library & Collections</span>
+            <span className={styles.navLabel}>Library &amp; Collections</span>
             <div className={styles.libraryDivider} />
             <div className={styles.playlistList}>
               <button
                 type="button"
                 className={`${styles.playlistItem} ${styles.playlistItemActive}`}
               >
+                <span>Live MongoDB Songs</span>
+                <span className={styles.playlistCount}>{dbSongs.length} tracks</span>
+              </button>
+              <button type="button" className={styles.playlistItem}>
                 <span>Late Night Vinyl Sessions</span>
                 <span className={styles.playlistCount}>34 tracks</span>
               </button>
@@ -173,16 +317,12 @@ export default function HomePage() {
                 <span className={styles.playlistCount}>18 tracks</span>
               </button>
               <button type="button" className={styles.playlistItem}>
-                <span>Analog Warmth & Jazz</span>
+                <span>Analog Warmth &amp; Jazz</span>
                 <span className={styles.playlistCount}>42 tracks</span>
               </button>
               <button type="button" className={styles.playlistItem}>
                 <span>Hi-Res Lossless Vault</span>
                 <span className={styles.playlistCount}>65 tracks</span>
-              </button>
-              <button type="button" className={styles.playlistItem}>
-                <span>Spatial Master Tape Cuts</span>
-                <span className={styles.playlistCount}>22 tracks</span>
               </button>
             </div>
           </div>
@@ -219,6 +359,16 @@ export default function HomePage() {
             </div>
 
             <div className={styles.topBarActions}>
+              {/* Database sync status badge */}
+              <div className={styles.dbBadge} title="Real-time MongoDB Song Feed">
+                <span className={styles.dbDot} />
+                <span>
+                  {isLoadingSongs
+                    ? "Syncing DB..."
+                    : `${dbSongs.length} Cloud Masters Active`}
+                </span>
+              </div>
+
               {status === "authenticated" && session?.user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Link href="/profile" className={styles.profileBadgeLink} title="Curator Profile">
@@ -271,7 +421,7 @@ export default function HomePage() {
               <div className={styles.guestNoticeContent}>
                 <span className={styles.guestNoticeIcon}>⚡</span>
                 <div className={styles.guestNoticeText}>
-                  <strong>Guest Mode:</strong> You are currently not authenticated. Sign in with Google to reserve your studio handle, sync playlists, and unlock uncompressed FLAC streams.
+                  <strong>Guest Mode:</strong> You are listening to direct cloud recordings. Sign in to curate your studio queue, upload master stems, and sync lossless presets.
                 </div>
               </div>
               <Link href="/login" className={styles.guestNoticeCta}>
@@ -280,9 +430,9 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Genre & Format Filter Chips */}
+          {/* Dynamic Genre & Format Filter Chips */}
           <div className={styles.chipsRow}>
-            {["All", "Vinyl Classics", "Acoustic Masters", "Audiophile FLAC", "Ambient & Spatial"].map((chip) => (
+            {dynamicChips.map((chip) => (
               <button
                 key={chip}
                 type="button"
@@ -294,30 +444,45 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Hero Featured Showcase Banner */}
+          {/* Hero Featured Showcase Banner (Highlights currently selected or top DB master) */}
           <div className={styles.heroBanner}>
             <div className={styles.heroContent}>
               <div className={styles.heroBadge}>
                 <span>FEATURED MASTERWORK</span>
                 <span>•</span>
-                <span>24-BIT / 192kHz FLAC</span>
+                <span>{currentTrack.rate}</span>
+                {currentTrack.verified && (
+                  <>
+                    <span>•</span>
+                    <span style={{ color: "#34D399" }}>VERIFIED MASTER</span>
+                  </>
+                )}
               </div>
-              <h1 className={styles.heroTitle}>
-                Verve &amp; Velvet: Analog Sessions
-              </h1>
+              <h1 className={styles.heroTitle}>{currentTrack.title}</h1>
               <p className={styles.heroDescription}>
-                Capturing authentic room acoustic reflections with ribbon microphones on vintage magnetic tape. Engineered for deep auditory depth and tactile warmth.
+                {currentTrack.album} • {currentTrack.artist}. {currentTrack.telemetry?.linerNotes || "Engineered for deep auditory depth and tactile warmth."}
               </p>
               <div className={styles.heroActions}>
                 <button
                   type="button"
                   className={styles.heroPlayBtn}
-                  onClick={() => handleTrackSelect(TRACKS_DATA[0])}
+                  onClick={() => handleTrackSelect(currentTrack)}
                 >
-                  <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                  <span>Play Full Album</span>
+                  {isPlaying ? (
+                    <>
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                      </svg>
+                      <span>Playing Master</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                      <span>Play Master</span>
+                    </>
+                  )}
                 </button>
 
                 <button
@@ -330,39 +495,68 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </button>
+
+                <Link
+                  href={`/song/${currentTrack.id}`}
+                  className={styles.heroSecondaryBtn}
+                  title="Open Dedicated Song Player"
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </Link>
               </div>
             </div>
 
             <div className={styles.heroArtWrap}>
-              <div className={styles.vinylDisc}>
-                <div className={styles.vinylCenter}>
-                  TUNEDIN
+              {currentTrack.poster_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={currentTrack.poster_url}
+                  alt={currentTrack.title}
+                  className={styles.heroPosterImg}
+                />
+              ) : (
+                <div className={styles.vinylDisc}>
+                  <div className={styles.vinylCenter}>TUNEDIN</div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Curated Media Shelves */}
+          {/* Curated Media Shelves (Showcases fetched songs & masters) */}
           <section className={styles.shelfSection}>
             <div className={styles.shelfHeader}>
-              <h2 className={styles.shelfTitle}>Audiophile Master Shelves</h2>
-              <button type="button" className={styles.shelfSeeAll}>View All (28)</button>
+              <h2 className={styles.shelfTitle}>Cloud Studio Shelves</h2>
+              <span className={styles.playlistCount}>
+                {combinedTracks.length} recordings curated
+              </span>
             </div>
 
             <div className={styles.cardsGrid}>
-              {SHELVES_DATA.map((item, idx) => (
+              {combinedTracks.slice(0, 4).map((item) => (
                 <div
                   key={item.id}
                   className={styles.mediaCard}
-                  onClick={() => handleTrackSelect(TRACKS_DATA[idx % TRACKS_DATA.length])}
+                  onClick={() => handleTrackSelect(item)}
                 >
                   <div className={styles.cardArtContainer}>
-                    <div className={styles.cardArtPlaceholder}>
-                      <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
-                      </svg>
-                      <span>{item.tag}</span>
-                    </div>
+                    {item.poster_url ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={item.poster_url}
+                        alt={item.title}
+                        className={styles.cardPosterImage}
+                      />
+                    ) : (
+                      <div className={styles.cardArtPlaceholder}>
+                        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+                        </svg>
+                        <span>{item.format}</span>
+                      </div>
+                    )}
                     <button
                       type="button"
                       className={styles.floatingPlayBtn}
@@ -375,7 +569,9 @@ export default function HomePage() {
                   </div>
                   <h3 className={styles.cardTitle}>{item.title}</h3>
                   <p className={styles.cardArtist}>{item.artist}</p>
-                  <span className={styles.cardFormat}>{item.format}</span>
+                  <span className={styles.cardFormat}>
+                    {item.format} • {item.rate}
+                  </span>
                 </div>
               ))}
             </div>
@@ -385,79 +581,115 @@ export default function HomePage() {
           <section className={styles.shelfSection}>
             <div className={styles.shelfHeader}>
               <h2 className={styles.shelfTitle}>Studio Tracklist</h2>
-              <span className={styles.playlistCount}>{filteredTracks.length} tracks available</span>
+              <span className={styles.playlistCount}>
+                {filteredTracks.length} tracks available
+              </span>
             </div>
 
-            <table className={styles.tracklistTable}>
-              <thead>
-                <tr className={styles.tableHeaderRow}>
-                  <th style={{ width: 48, textAlign: "center" }}>#</th>
-                  <th>TITLE</th>
-                  <th>ALBUM</th>
-                  <th>DATE ADDED</th>
-                  <th style={{ textAlign: "right" }}>DURATION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTracks.map((track, index) => {
-                  const isActive = currentTrack.id === track.id;
-                  return (
-                    <tr
-                      key={track.id}
-                      className={`${styles.trackRow} ${isActive ? styles.trackRowActive : ""}`}
-                      onClick={() => handleTrackSelect(track)}
-                    >
-                      <td>
-                        {isActive && isPlaying ? (
-                          <div className={styles.playingAnim}>
-                            <div className={styles.playingBar} />
-                            <div className={styles.playingBar} />
-                            <div className={styles.playingBar} />
+            {isLoadingSongs && dbSongs.length === 0 ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "#8C7370" }}>
+                <span>Loading songs and acoustic details from database...</span>
+              </div>
+            ) : filteredTracks.length === 0 ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "#8C7370" }}>
+                <span>No recordings found matching &ldquo;{searchQuery}&rdquo;.</span>
+              </div>
+            ) : (
+              <table className={styles.tracklistTable}>
+                <thead>
+                  <tr className={styles.tableHeaderRow}>
+                    <th style={{ width: 48, textAlign: "center" }}>#</th>
+                    <th>TITLE &amp; ARTIST</th>
+                    <th>ALBUM</th>
+                    <th>DATE ADDED</th>
+                    <th style={{ textAlign: "right" }}>DURATION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTracks.map((track, index) => {
+                    const isActive = currentTrack.id === track.id;
+                    return (
+                      <tr
+                        key={track.id}
+                        className={`${styles.trackRow} ${isActive ? styles.trackRowActive : ""}`}
+                        onClick={() => handleTrackSelect(track)}
+                      >
+                        <td>
+                          {isActive && isPlaying ? (
+                            <div className={styles.playingAnim}>
+                              <div className={styles.playingBar} />
+                              <div className={styles.playingBar} />
+                              <div className={styles.playingBar} />
+                            </div>
+                          ) : (
+                            <span className={styles.trackIndex}>{index + 1}</span>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            {track.poster_url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={track.poster_url}
+                                alt={track.title}
+                                className={styles.trackCoverThumb}
+                              />
+                            ) : (
+                              <div className={styles.trackCoverPlaceholder}>
+                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                </svg>
+                              </div>
+                            )}
+
+                            <div className={styles.trackTitleCell}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <Link
+                                  href={`/song/${track.id}`}
+                                  className={styles.trackTitleText}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                  title="Open dedicated song player"
+                                >
+                                  {track.title}
+                                </Link>
+
+                                {track.verified && (
+                                  <span className={`${styles.verifiedPill} ${styles.verifiedPillTrue}`} title="Verified Master">
+                                    ✓ Verified
+                                  </span>
+                                )}
+
+                                <Link
+                                  href={`/song/${track.id}`}
+                                  className={styles.openSongLink}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                  title="Open Song View"
+                                >
+                                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                </Link>
+                              </div>
+                              <span className={styles.trackArtistText}>{track.artist}</span>
+                            </div>
                           </div>
-                        ) : (
-                          <span className={styles.trackIndex}>{index + 1}</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className={styles.trackTitleCell}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <Link
-                              href={`/song/${track.id}`}
-                              className={styles.trackTitleText}
-                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                              title="Open dedicated song player"
-                            >
-                              {track.title}
-                            </Link>
-                            <Link
-                              href={`/song/${track.id}`}
-                              className={styles.openSongLink}
-                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                              title="Open Song View"
-                            >
-                              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </Link>
-                          </div>
-                          <span className={styles.trackArtistText}>{track.artist}</span>
-                        </div>
-                      </td>
-                      <td>{track.album}</td>
-                      <td>{track.dateAdded}</td>
-                      <td style={{ textAlign: "right" }}>
-                        <span className={styles.trackDuration}>{track.duration}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td>{track.album}</td>
+                        <td>{track.dateAdded}</td>
+                        <td style={{ textAlign: "right" }}>
+                          <span className={styles.trackDuration}>{track.duration}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </section>
         </main>
 
         {/* ============================================================== */}
-        {/* 3. RIGHT COLUMN: CONTEXTUAL STUDIO INSPECTOR                   */}
+        {/* 3. RIGHT COLUMN: CONTEXTUAL STUDIO INSPECTOR (DETAILS & AI OBS) */}
         {/* ============================================================== */}
         <aside className={styles.rightInspector}>
           <div className={styles.inspectorHeader}>
@@ -465,12 +697,22 @@ export default function HomePage() {
             <span className={styles.specValue}>{currentTrack.format}</span>
           </div>
 
+          {/* Artwork Display */}
           <div className={styles.inspectorArt}>
-            <div className={styles.inspectorArtOverlay}>
-              <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#E88C2B">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
+            {currentTrack.poster_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={currentTrack.poster_url}
+                alt={currentTrack.title}
+                className={styles.inspectorCoverImg}
+              />
+            ) : (
+              <div className={styles.inspectorArtOverlay}>
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#E88C2B">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+              </div>
+            )}
           </div>
 
           <div>
@@ -478,7 +720,7 @@ export default function HomePage() {
             <p className={styles.inspectorArtist}>{currentTrack.artist}</p>
           </div>
 
-          {/* Telemetry Hardware Specs Card */}
+          {/* Telemetry Hardware & Song Details Specs Card */}
           <div className={styles.specsCard}>
             <div className={styles.specRow}>
               <span className={styles.specLabel}>Sample Rate</span>
@@ -486,23 +728,66 @@ export default function HomePage() {
             </div>
             <div className={styles.specRow}>
               <span className={styles.specLabel}>Audio Codec</span>
-              <span className={styles.specValue}>{currentTrack.format} Lossless</span>
+              <span className={styles.specValue}>{currentTrack.format}</span>
             </div>
             <div className={styles.specRow}>
-              <span className={styles.specLabel}>Dynamic Range</span>
-              <span className={styles.specValue}>DR14 High Fidelity</span>
+              <span className={styles.specLabel}>Verification</span>
+              <span
+                className={styles.specValue}
+                style={{
+                  color: currentTrack.verified ? "#059669" : "#D97706",
+                  textTransform: "capitalize",
+                }}
+              >
+                {currentTrack.verified ? "Verified Master" : (currentTrack.verificationStatus || "Pending")}
+              </span>
             </div>
             <div className={styles.specRow}>
-              <span className={styles.specLabel}>Output Destination</span>
-              <span className={styles.specValue}>Tube DAC (Direct)</span>
+              <span className={styles.specLabel}>Curator / Uploader</span>
+              <span className={styles.specValue}>
+                {typeof currentTrack.uploadUser === "object" &&
+                currentTrack.uploadUser &&
+                "username" in (currentTrack.uploadUser as any)
+                  ? `@${(currentTrack.uploadUser as any).username}`
+                  : "@Curator"}
+              </span>
+            </div>
+            <div className={styles.specRow}>
+              <span className={styles.specLabel}>Streams / Plays</span>
+              <span className={styles.specValue}>{currentTrack.plays || 0} plays</span>
+            </div>
+            <div className={styles.specRow}>
+              <span className={styles.specLabel}>Genre</span>
+              <span className={styles.specValue}>{currentTrack.genre}</span>
             </div>
           </div>
+
+          {/* AI Observation Card if present on ISong */}
+          {currentTrack.aiObservation && typeof currentTrack.aiObservation === "object" && (
+            <div className={styles.aiObservationCard}>
+              <div className={styles.aiObsHeader}>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>AI Master Observation</span>
+              </div>
+              <div className={styles.aiObsGrid}>
+                {Object.entries(currentTrack.aiObservation).map(([key, val]) => (
+                  <div key={key} className={styles.aiObsRow}>
+                    <span className={styles.aiObsKey}>{key}:</span>
+                    <span className={styles.aiObsVal}>{String(val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Liner Notes & Synchronized Lyrics */}
           <div className={styles.navSection}>
             <span className={styles.navLabel}>Liner Notes &amp; Acoustic Details</span>
             <div className={styles.lyricsSnippet}>
-              &ldquo;Recorded at 30 ips onto 2-inch tape with Neumann U47 microphones. Preserves natural room reverberation without artificial limiter compression.&rdquo;
+              &ldquo;{currentTrack.telemetry?.linerNotes ||
+                "Recorded with pristine analog warmth. Preserves natural acoustic reflections without artificial limiter compression."}&rdquo;
             </div>
           </div>
         </aside>
@@ -519,9 +804,18 @@ export default function HomePage() {
             className={styles.dockThumbnail}
             title="Open dedicated song player"
           >
-            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-            </svg>
+            {currentTrack.poster_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={currentTrack.poster_url}
+                alt={currentTrack.title}
+                className={styles.dockCoverThumb}
+              />
+            ) : (
+              <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+              </svg>
+            )}
           </Link>
           <div className={styles.dockTrackInfo}>
             <Link
@@ -617,14 +911,15 @@ export default function HomePage() {
 
           {/* Interactive Progress Rail */}
           <div className={styles.scrubberRow}>
-            <span className={styles.timecode}>02:18</span>
+            <span className={styles.timecode}>{formatSeconds(currentTimeSec)}</span>
             <div
               className={styles.scrubberTrack}
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                setProgress(Math.max(0, Math.min(100, (clickX / rect.width) * 100)));
-              }}
+              onClick={handleScrubberClick}
+              role="slider"
+              aria-label="Track progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
             >
               <div
                 className={styles.scrubberProgress}
@@ -644,10 +939,10 @@ export default function HomePage() {
           <button
             type="button"
             className={styles.dockIconBtn}
-            onClick={() => setVolume((v) => (v === 0 ? 75 : 0))}
-            title={volume === 0 ? "Unmute" : "Mute"}
+            onClick={() => setIsMuted((m) => !m)}
+            title={isMuted || volume === 0 ? "Unmute" : "Mute"}
           >
-            {volume === 0 ? (
+            {isMuted || volume === 0 ? (
               <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
@@ -665,11 +960,12 @@ export default function HomePage() {
               const rect = e.currentTarget.getBoundingClientRect();
               const clickX = e.clientX - rect.left;
               setVolume(Math.max(0, Math.min(100, Math.round((clickX / rect.width) * 100))));
+              setIsMuted(false);
             }}
           >
             <div
               className={styles.volumeProgress}
-              style={{ width: `${volume}%` }}
+              style={{ width: `${isMuted ? 0 : volume}%` }}
             />
           </div>
 

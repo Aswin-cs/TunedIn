@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "./user.model";
 
 const songSchema = new mongoose.Schema({
     title: {
@@ -105,4 +106,5 @@ export interface ISong {
     updatedAt?: Date;
 }
 
-export const Song = mongoose.models.Song || mongoose.model("Song", songSchema);
+export const Song = mongoose.models.Song || mongoose.model("Song", songSchema);
+export default Song;
