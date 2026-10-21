@@ -356,7 +356,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title={isShuffle ? "Disable Shuffle" : "Enable Shuffle"}
                 aria-label="Shuffle"
               >
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H4m0 0l4 4m-4-4l4-4m8 0h4m0 0l-4-4m4 4l-4 4" />
                 </svg>
                 {isShuffle && <span className={styles.activeIndicatorPip} />}
@@ -369,7 +369,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title="Previous Track"
                 aria-label="Previous Track"
               >
-                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
                 </svg>
               </button>
@@ -383,11 +383,11 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 aria-label={isPlaying ? "Pause Track" : "Play Track"}
               >
                 {isPlaying ? (
-                  <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                  <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                   </svg>
                 ) : (
-                  <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                  <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
@@ -400,7 +400,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title="Next Track"
                 aria-label="Next Track"
               >
-                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                 </svg>
               </button>
@@ -415,7 +415,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 title={isRepeat ? "Disable Repeat" : "Enable Repeat"}
                 aria-label="Repeat"
               >
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {isRepeat && <span className={styles.activeIndicatorPip} />}
