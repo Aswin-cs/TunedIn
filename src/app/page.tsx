@@ -110,9 +110,9 @@ export default function HomePage() {
             </div>
             <div className={styles.brandTitles}>
               <span className={styles.brandName}>
-                TUNED<span className={styles.brandTitleAccent}>IN</span>
+                Tuned<span className={styles.brandTitleAccent}>In</span>
               </span>
-              <span className={styles.brandTagline}>Architectural Acoustics</span>
+              <span className={styles.brandTagline}>Studio Wave</span>
             </div>
           </Link>
 

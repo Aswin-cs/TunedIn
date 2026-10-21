@@ -197,7 +197,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               priority
             />
             <span className={styles.brandTitle}>
-              TUNED<span className={styles.brandAccent}>IN</span>
+              Tuned<span className={styles.brandAccent}>In</span>
             </span>
           </Link>
         </div>
