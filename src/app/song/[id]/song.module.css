@@ -485,10 +485,10 @@
 /* Interactive Tonearm Component */
 .tonearmAssembly {
   position: absolute;
-  top: 12px;
-  right: 20px;
-  width: 70px;
-  height: 175px;
+  top: 10px;
+  right: 18px;
+  width: 75px;
+  height: clamp(155px, 23vh, 205px);
   pointer-events: none;
   z-index: 5;
 }
@@ -497,8 +497,8 @@
   position: absolute;
   top: 0;
   right: 6px;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: radial-gradient(circle, #555 0%, #2a2a2a 60%, #151515 100%);
   border: 1.5px solid rgba(255, 184, 109, 0.50);
@@ -509,8 +509,8 @@
 }
 
 .tonearmPivotCap {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffdcc1, #ffb86d 50%, #e88c2b 100%);
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -519,9 +519,9 @@
 .tonearmRod {
   position: absolute;
   top: 16px;
-  right: 21px;
+  right: 22px;
   width: 4px;
-  height: 128px;
+  height: clamp(118px, 17vh, 150px);
   background: linear-gradient(to right, #bbb, #888 40%, #555 100%);
   border-radius: 3px;
   transform-origin: top center;
@@ -538,8 +538,8 @@
   position: absolute;
   bottom: -10px;
   left: -6px;
-  width: 15px;
-  height: 25px;
+  width: 16px;
+  height: 26px;
   background: #222;
   border: 1px solid rgba(255, 184, 109, 0.50);
   border-radius: 2px;
@@ -616,26 +616,27 @@
    ========================================================================== */
 .trackMetadataSection {
   text-align: center;
-  margin-bottom: 1.15rem;
+  margin-bottom: clamp(0.5rem, 1.4vh, 1rem);
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .songTitle {
   font-family: var(--font-display, 'Epilogue', sans-serif);
-  font-size: 1.45rem;
+  font-size: clamp(1.35rem, 2.5vh, 1.7rem);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.025em;
   color: #2A1608;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
   max-width: 95%;
 }
 
 @media (max-width: 640px) {
   .songTitle {
-    font-size: 1.25rem;
+    font-size: clamp(1.15rem, 2.2vh, 1.35rem);
   }
 }
 
@@ -645,7 +646,7 @@
   justify-content: center;
   gap: 0.45rem;
   flex-wrap: wrap;
-  font-size: 0.85rem;
+  font-size: clamp(0.82rem, 1.4vh, 0.92rem);
   color: #6E5343;
 }
 
@@ -675,11 +676,12 @@
    INTERACTIVE SCRUBBER & TIMELINE
    ========================================================================== */
 .scrubberContainer {
-  margin-bottom: 1.15rem;
+  margin-bottom: clamp(0.5rem, 1.4vh, 1rem);
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .scrubberTrack {
@@ -747,20 +749,21 @@
 .transportSection {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: clamp(0.5rem, 1.4vh, 1rem);
   width: 100%;
+  flex-shrink: 0;
 }
 
 .transportMain {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: clamp(0.75rem, 2vw, 1.15rem);
 }
 
 .transportIconBtn {
-  width: 38px;
-  height: 38px;
+  width: clamp(38px, 5vh, 42px);
+  height: clamp(38px, 5vh, 42px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(232, 140, 43, 0.22);
@@ -799,8 +802,8 @@
 }
 
 .masterPlayBtn {
-  width: 56px;
-  height: 56px;
+  width: clamp(54px, 7.5vh, 62px);
+  height: clamp(54px, 7.5vh, 62px);
   border-radius: 50%;
   background: linear-gradient(135deg, #ffb86d 0%, #e88c2b 100%);
   border: none;
@@ -830,12 +833,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding-top: 0.85rem;
+  padding-top: clamp(0.45rem, 1.1vh, 0.75rem);
   border-top: 1px solid rgba(232, 140, 43, 0.15);
+  flex-shrink: 0;
 }
 
 .speedSelector {
-  padding: 0.3rem 0.75rem;
+  padding: 0.25rem 0.7rem;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(232, 140, 43, 0.22);
   border-radius: 9999px;
@@ -948,3 +952,69 @@
     opacity: 1;
   }
 }
+
+/* Guest Session Banner on Song Studio Page */
+.guestNoticeBanner {
+  position: relative;
+  z-index: 20;
+  margin: 0.5rem auto 0;
+  max-width: 485px;
+  width: calc(100% - 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(232, 140, 43, 0.25);
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  font-size: 0.75rem;
+  color: #5C3D1E;
+  animation: slideDown 0.3s ease;
+  backdrop-filter: blur(16px);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.guestNoticeContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guestNoticeIcon {
+  color: #E88C2B;
+  font-weight: 700;
+}
+
+.guestNoticeCta {
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #ffb86d, #e88c2b);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(232, 140, 43, 0.3);
+  transition: all 0.2s ease;
+}
+
+.guestNoticeCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(232, 140, 43, 0.4);
+}
+

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
 import { Track, TRACKS_DATA } from "@/data/tracks";
 import styles from "./page.module.css";
 
@@ -39,6 +40,7 @@ const SHELVES_DATA = [
 ];
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
   const [currentTrack, setCurrentTrack] = useState<Track>(TRACKS_DATA[0]);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(34); // %
@@ -216,19 +218,51 @@ export default function HomePage() {
             </div>
 
             <div className={styles.topBarActions}>
-              <Link href="/profile" className={styles.profileBadgeLink} title="Acoustic Curator Profile">
-                <div className={styles.avatarMini}>JV</div>
-                <span className={styles.profileNameMini}>Julian</span>
-              </Link>
-
-              <Link href="/login" className={styles.authButton}>
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                <span>Sign In</span>
-              </Link>
+              {session?.user ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Link href="/profile" className={styles.profileBadgeLink} title="Curator Profile">
+                    <div className={styles.avatarMini}>
+                      {(session.user as any).username ? (session.user as any).username.slice(0, 2).toUpperCase() : "TI"}
+                    </div>
+                    <span className={styles.profileNameMini}>
+                      @{(session.user as any).username || session.user.name || "Curator"}
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className={styles.profileBadgeLink}
+                    title="Sign Out"
+                    style={{ cursor: "pointer", border: "none" }}
+                  >
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <Link href="/login" className={styles.authButton}>
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign In</span>
+                </Link>
+              )}
             </div>
           </div>
+
+          {/* Unauthenticated / Guest Notification Banner */}
+          {status === "unauthenticated" && (
+            <div className={styles.guestNoticeRibbon} role="status">
+              <div className={styles.guestNoticeContent}>
+                <span className={styles.guestNoticeIcon}>⚡</span>
+                <div className={styles.guestNoticeText}>
+                  <strong>Guest Mode:</strong> You are currently not authenticated. Sign in with Google to reserve your studio handle, sync playlists, and unlock uncompressed FLAC streams.
+                </div>
+              </div>
+              <Link href="/login" className={styles.guestNoticeCta}>
+                Sign In
+              </Link>
+            </div>
+          )}
 
           {/* Genre & Format Filter Chips */}
           <div className={styles.chipsRow}>

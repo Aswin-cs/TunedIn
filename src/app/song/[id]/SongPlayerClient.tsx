@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Track, TRACKS_DATA } from "@/data/tracks";
 import styles from "./song.module.css";
 
@@ -13,6 +14,7 @@ interface SongPlayerClientProps {
 
 export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [currentTrack, setCurrentTrack] = useState<Track>(initialTrack);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [currentTimeSec, setCurrentTimeSec] = useState<number>(34);
@@ -248,6 +250,21 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
           </Link>
         </div>
       </header>
+
+      {/* Guest Session Notification Banner */}
+      {status === "unauthenticated" && (
+        <div className={styles.guestNoticeBanner} role="status">
+          <div className={styles.guestNoticeContent}>
+            <span className={styles.guestNoticeIcon}>⚡</span>
+            <span>
+              <strong>Guest Session:</strong> You are listening unauthenticated. Sign in with Google to sync queue &amp; high-res presets.
+            </span>
+          </div>
+          <Link href="/login" className={styles.guestNoticeCta}>
+            Sign In
+          </Link>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* 3. MAIN STAGE CONTENT (2 COLUMNS)                              */}

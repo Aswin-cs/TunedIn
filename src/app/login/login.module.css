@@ -6,6 +6,9 @@
 .loginWrapper {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -13,6 +16,10 @@
   color: var(--text-dark-primary, #160303);
   font-family: var(--font-body);
   overflow-x: hidden;
+  overflow-y: auto;
+  /* Hide scrollbar while preserving smooth scroll capability */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   /* Architectural Blueprint Grid on Light Foundation */
   background-image: 
     radial-gradient(rgba(232, 140, 43, 0.1) 1px, transparent 1px),
@@ -21,70 +28,91 @@
   background-size: 32px 32px, 64px 64px, 64px 64px;
 }
 
-/* Background Ambient Lighting & Acoustic Wireframes */
+.loginWrapper::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ============================================================== */
+/* BACKGROUND AMBIENT LIGHTING & DOTTED ACOUSTIC RINGS            */
+/* ============================================================== */
 .ambientContainer {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  /* Strict containment & clip-path guarantees no scrollbar trigger */
+  contain: strict;
+  clip-path: inset(0);
 }
 
 .ambientOrb1 {
   position: absolute;
-  top: -12rem;
+  top: -10rem;
   left: 20%;
-  width: 820px;
-  height: 820px;
+  width: min(720px, 90vw);
+  height: min(720px, 90vw);
   border-radius: 9999px;
   background: radial-gradient(circle, rgba(232, 140, 43, 0.5) 0%, rgba(255, 160, 50, 0.35) 40%, rgba(244, 129, 110, 0.2) 65%, transparent 80%);
-  filter: blur(105px);
+  filter: blur(95px);
   animation: pulseGlow 12s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .ambientOrb2 {
   position: absolute;
   top: 25%;
-  right: -8rem;
-  width: 760px;
-  height: 760px;
+  right: -6rem;
+  width: min(680px, 85vw);
+  height: min(680px, 85vw);
   border-radius: 9999px;
   background: radial-gradient(circle, rgba(255, 140, 40, 0.52) 0%, rgba(244, 100, 70, 0.35) 40%, rgba(255, 184, 109, 0.2) 65%, transparent 80%);
-  filter: blur(110px);
+  filter: blur(100px);
   animation: pulseGlow2 15s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .ambientOrb3 {
   position: absolute;
-  bottom: -10rem;
+  bottom: -8rem;
   left: 2rem;
-  width: 650px;
-  height: 650px;
+  width: min(580px, 75vw);
+  height: min(580px, 75vw);
   border-radius: 9999px;
   background: radial-gradient(circle, rgba(232, 140, 43, 0.45) 0%, rgba(255, 180, 80, 0.3) 45%, transparent 75%);
-  filter: blur(95px);
+  filter: blur(85px);
+  will-change: transform, opacity;
 }
 
+/* Concentric Acoustic Rings (Dotted Circles) */
 .acousticRings {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 1400px;
-  height: 1400px;
+  width: min(1200px, 130vh);
+  height: min(1200px, 130vh);
   opacity: 0.88;
   pointer-events: none;
+  overflow: hidden;
+  contain: paint;
 }
 
-/* Individual ring music-sync pulse animations */
+/* Individual ring pulse animations */
 .ring1 {
   transform-origin: 500px 500px;
   animation: ringSyncPulse 6s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .ring2 {
   transform-origin: 500px 500px;
   animation: ringSyncPulse 6s ease-in-out 1.5s infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes ringSyncPulse {
@@ -94,9 +122,9 @@
     stroke-width: 1.5;
   }
   30% {
-    transform: scale(1.08);
-    opacity: 1;
-    stroke-width: 2.8;
+    transform: scale(1.06);
+    opacity: 0.95;
+    stroke-width: 2.2;
   }
   60% {
     transform: scale(0.96);
@@ -104,9 +132,9 @@
     stroke-width: 1.6;
   }
   80% {
-    transform: scale(1.03);
-    opacity: 0.95;
-    stroke-width: 2.2;
+    transform: scale(1.02);
+    opacity: 0.9;
+    stroke-width: 2;
   }
 }
 
@@ -116,116 +144,74 @@
     opacity: 0.6;
   }
   50% {
-    transform: scale(1.1) translate(-20px, 15px);
+    transform: scale(1.08) translate(-15px, 12px);
     opacity: 0.85;
   }
 }
 
 @keyframes pulseGlow2 {
   0%, 100% {
-    transform: scale(1.05) translate(0, 0);
+    transform: scale(1.03) translate(0, 0);
     opacity: 0.5;
   }
   50% {
-    transform: scale(0.94) translate(25px, -20px);
+    transform: scale(0.95) translate(18px, -15px);
     opacity: 0.75;
   }
 }
 
-/* Header */
+/* ============================================================== */
+/* HEADER                                                         */
+/* ============================================================== */
 .header {
   position: relative;
   z-index: 30;
   width: 100%;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(78, 4, 1, 0.05);
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 @media (min-width: 1024px) {
   .header {
-    padding: 1.5rem 3.5rem;
+    padding: 1.15rem 3.5rem;
   }
 }
 
 .brandLink {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
   text-decoration: none;
   cursor: pointer;
 }
 
 .brandIconContainer {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 6px 14px rgba(232, 140, 43, 0.35));
+  filter: drop-shadow(0 4px 12px rgba(232, 140, 43, 0.35));
   transition: transform 0.25s ease;
 }
 
 .brandLink:hover .brandIconContainer {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .brandLogoImage {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.soundwave {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  height: 24px;
-  padding: 0 4px;
-}
-
-.waveBar {
-  width: 2.5px;
-  background-color: var(--color-orange-grove, #E88C2B);
-  border-radius: 9999px;
-}
-
-.waveBar1 {
-  height: 12px;
-  animation: wavePulse 1.2s ease-in-out infinite 0.1s;
-}
-.waveBar2 {
-  height: 20px;
-  animation: wavePulse 1.2s ease-in-out infinite 0.35s;
-}
-.waveBar3 {
-  height: 8px;
-  animation: wavePulse 1.2s ease-in-out infinite 0.2s;
-}
-.waveBar4 {
-  height: 24px;
-  animation: wavePulse 1.2s ease-in-out infinite 0.45s;
-}
-.waveBar5 {
-  height: 16px;
-  animation: wavePulse 1.2s ease-in-out infinite 0.15s;
-}
-
-@keyframes wavePulse {
-  0%, 100% {
-    height: 6px;
-  }
-  50% {
-    height: 22px;
-  }
 }
 
 .brandText {
@@ -236,8 +222,8 @@
 .brandTitle {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.5rem;
-  letter-spacing: 0.15em;
+  font-size: 1.4rem;
+  letter-spacing: 0.12em;
   color: var(--text-dark-primary, #160303);
   line-height: 1.1;
 }
@@ -274,7 +260,7 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   border-radius: var(--radius-md, 0.75rem);
   text-decoration: none;
   transition: all 0.2s ease;
@@ -293,7 +279,9 @@
   color: var(--color-orange-grove, #E88C2B);
 }
 
-/* Main Workspace */
+/* ============================================================== */
+/* MAIN WORKSPACE                                                 */
+/* ============================================================== */
 .main {
   position: relative;
   z-index: 20;
@@ -302,7 +290,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2.5rem 1rem;
+  padding: clamp(0.75rem, 2vh, 1.5rem) 1rem;
   width: 100%;
   max-width: 80rem;
   margin: 0 auto;
@@ -311,7 +299,7 @@
 .cardWrapper {
   position: relative;
   width: 100%;
-  max-width: 30rem; /* ~480px */
+  max-width: 29rem; /* ~464px */
   margin: 0 auto;
 }
 
@@ -321,51 +309,52 @@
   inset: -1.5rem;
   pointer-events: none;
   z-index: -10;
+  overflow: hidden;
+  contain: paint;
 }
 
 .cardAura1 {
   position: absolute;
-  top: -5rem;
-  left: -4rem;
-  width: 28rem;
-  height: 28rem;
+  top: -4rem;
+  left: -3rem;
+  width: 24rem;
+  height: 24rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(232, 140, 43, 0.72) 0%, rgba(255, 160, 40, 0.48) 45%, rgba(244, 129, 110, 0.25) 70%, transparent 85%);
-  filter: blur(62px);
+  background: radial-gradient(circle, rgba(232, 140, 43, 0.65) 0%, rgba(255, 160, 40, 0.42) 45%, rgba(244, 129, 110, 0.22) 70%, transparent 85%);
+  filter: blur(55px);
   animation: auraGlowPulse1 5s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
 .cardAura2 {
   position: absolute;
-  bottom: -5rem;
-  right: -3rem;
-  width: 28rem;
-  height: 28rem;
+  bottom: -4rem;
+  right: -2rem;
+  width: 24rem;
+  height: 24rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(255, 100, 60, 0.65) 0%, rgba(232, 140, 43, 0.52) 40%, rgba(255, 184, 109, 0.28) 70%, transparent 85%);
-  filter: blur(65px);
+  background: radial-gradient(circle, rgba(255, 100, 60, 0.58) 0%, rgba(232, 140, 43, 0.46) 40%, rgba(255, 184, 109, 0.24) 70%, transparent 85%);
+  filter: blur(55px);
   animation: auraGlowPulse2 7s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
 /* ============================================================== */
-/* WHITE SANCTUARY GLASS CARD WITH SUBTLE LUMINESCENCE            */
+/* WHITE SANCTUARY GLASS CARD                                     */
 /* ============================================================== */
 .glassCard {
   position: relative;
   overflow: hidden;
-  border-radius: 28px;
-  padding: 2.75rem 2.25rem 2.5rem 2.25rem;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vh, 2.25rem) clamp(1.25rem, 4vw, 2rem);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(36px);
   -webkit-backdrop-filter: blur(36px);
-  /* Crisp light hairline border with specular highlight */
   border: 1px solid var(--border-light-subtle, rgba(78, 4, 1, 0.08));
   border-top-color: rgba(255, 255, 255, 0.95);
   box-shadow: 
-    0 24px 60px -10px rgba(78, 4, 1, 0.08),
-    0 0 50px -5px rgba(232, 140, 43, 0.12),
+    0 20px 50px -10px rgba(78, 4, 1, 0.07),
+    0 0 45px -5px rgba(232, 140, 43, 0.12),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
   animation: cardAtmosphereBreath 8s ease-in-out infinite alternate;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -373,8 +362,8 @@
 
 @media (max-width: 480px) {
   .glassCard {
-    padding: 2rem 1.5rem 2rem 1.5rem;
-    border-radius: 22px;
+    padding: 1.5rem 1.25rem;
+    border-radius: 20px;
   }
 }
 
@@ -390,7 +379,6 @@
   z-index: 1;
 }
 
-/* Base Light Substrate with richer radiant amber top glow */
 .cardGradientBase {
   position: absolute;
   inset: 0;
@@ -403,99 +391,142 @@
   );
 }
 
-/* Primary Radiating Amber Bloom — Intense vivid bloom */
 .cardGlowOrb1 {
   position: absolute;
-  top: -6rem;
+  top: -5rem;
   left: 8%;
-  width: 28rem;
-  height: 26rem;
+  width: 24rem;
+  height: 22rem;
   border-radius: 9999px;
   background: radial-gradient(
     circle,
-    rgba(255, 140, 20, 0.82) 0%,
-    rgba(232, 140, 43, 0.6) 35%,
-    rgba(244, 100, 70, 0.35) 65%,
+    rgba(255, 140, 20, 0.78) 0%,
+    rgba(232, 140, 43, 0.55) 35%,
+    rgba(244, 100, 70, 0.3) 65%,
     transparent 80%
   );
-  filter: blur(40px);
+  filter: blur(36px);
   animation: cardOrbFloat1 6s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
 
-/* Secondary Vivid Coral Bloom */
 .cardGlowOrb2 {
   position: absolute;
   top: -2rem;
-  right: -4rem;
-  width: 24rem;
-  height: 24rem;
+  right: -3rem;
+  width: 22rem;
+  height: 22rem;
   border-radius: 9999px;
   background: radial-gradient(
     circle,
-    rgba(255, 90, 40, 0.72) 0%,
-    rgba(232, 140, 43, 0.52) 38%,
-    rgba(255, 184, 109, 0.28) 70%,
+    rgba(255, 90, 40, 0.68) 0%,
+    rgba(232, 140, 43, 0.48) 38%,
+    rgba(255, 184, 109, 0.25) 70%,
     transparent 85%
   );
-  filter: blur(42px);
+  filter: blur(38px);
   animation: cardOrbFloat2 8s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
 
-/* Tertiary Pulse Center */
 .cardGlowOrb3 {
   position: absolute;
   top: 25%;
   left: 15%;
-  width: 22rem;
-  height: 20rem;
+  width: 20rem;
+  height: 18rem;
   border-radius: 9999px;
   background: radial-gradient(
     circle,
-    rgba(255, 195, 80, 0.78) 0%,
-    rgba(232, 140, 43, 0.48) 45%,
+    rgba(255, 195, 80, 0.72) 0%,
+    rgba(232, 140, 43, 0.44) 45%,
     transparent 80%
   );
-  filter: blur(36px);
+  filter: blur(32px);
   animation: cardOrbPulse 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   will-change: transform, opacity;
 }
 
-/* Conic Shimmer */
 .cardMeshShimmer {
   position: absolute;
-  inset: -60%;
+  inset: -50%;
   background: conic-gradient(
     from 180deg at 50% 50%,
     transparent 0deg,
-    rgba(232, 140, 43, 0.26) 45deg,
+    rgba(232, 140, 43, 0.24) 45deg,
     transparent 100deg,
-    rgba(255, 160, 40, 0.22) 200deg,
+    rgba(255, 160, 40, 0.2) 200deg,
     transparent 280deg,
-    rgba(255, 95, 45, 0.18) 340deg,
+    rgba(255, 95, 45, 0.16) 340deg,
     transparent 360deg
   );
-  filter: blur(35px);
+  filter: blur(30px);
   animation: cardShimmerRotate 14s linear infinite;
   will-change: transform;
 }
 
-/* Architectural Precision Dot Grid Overlay */
 .cardGridOverlay {
   position: absolute;
   inset: 0;
   background-image: 
     radial-gradient(rgba(78, 4, 1, 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.7;
+  opacity: 0.65;
   pointer-events: none;
 }
 
-/* Card Header */
+/* ============================================================== */
+/* NOTICE BANNER                                                  */
+/* ============================================================== */
+.authNoticeBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.875rem;
+  margin-bottom: 1.15rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+}
+
+.authNoticeGuest {
+  background: rgba(232, 140, 43, 0.10);
+  border: 1px solid rgba(232, 140, 43, 0.30);
+  color: #7C2D12;
+}
+
+.authNoticeAuthenticated {
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.30);
+  color: #065F46;
+}
+
+.authNoticeIcon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.authNoticeText {
+  flex: 1;
+}
+
+.authNoticeStrong {
+  font-weight: 700;
+  display: inline;
+}
+
+/* ============================================================== */
+/* CARD HEADER                                                    */
+/* ============================================================== */
 .cardHeader {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
   position: relative;
   z-index: 2;
 }
@@ -503,16 +534,10 @@
 .cardTitle {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 2.25rem;
+  font-size: clamp(1.85rem, 4vw, 2.35rem);
   line-height: 1.15;
   letter-spacing: -0.025em;
   color: var(--text-dark-primary, #160303);
-}
-
-@media (min-width: 640px) {
-  .cardTitle {
-    font-size: 2.45rem;
-  }
 }
 
 .whiteAccent,
@@ -523,19 +548,21 @@
 }
 
 .cardDescription {
-  margin-top: 0.875rem;
+  margin-top: 0.65rem;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
   color: var(--text-dark-secondary, #553E3C);
-  line-height: 1.55;
+  line-height: 1.5;
   max-width: 22rem;
   margin-inline: auto;
   font-weight: 400;
 }
 
-/* Pill Switcher */
+/* ============================================================== */
+/* PILL TAB SWITCHER                                              */
+/* ============================================================== */
 .tabContainer {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
   position: relative;
   z-index: 2;
 }
@@ -545,22 +572,21 @@
   border: 1px solid var(--border-light-subtle, rgba(78, 4, 1, 0.08));
   box-shadow: inset 0 2px 4px rgba(78, 4, 1, 0.04);
   border-radius: 9999px;
-  padding: 4px;
+  padding: 3.5px;
   display: flex;
   position: relative;
 }
 
-/* Smooth Sliding Indicator Pill */
 .tabIndicator {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
+  top: 3.5px;
+  bottom: 3.5px;
+  left: 3.5px;
+  width: calc(50% - 3.5px);
   border-radius: 9999px;
   background: linear-gradient(135deg, var(--color-orange-grove, #E88C2B), var(--color-warm-amber, #FFA73F));
   box-shadow: 0 4px 14px rgba(232, 140, 43, 0.35);
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
   z-index: 1;
   will-change: transform;
@@ -572,18 +598,18 @@
 
 .tabButton {
   flex: 1;
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 0.85rem;
   border-radius: 9999px;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
   border: none;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   cursor: pointer;
-  transition: color 0.28s ease, opacity 0.2s ease, transform 0.15s ease;
+  transition: color 0.25s ease, opacity 0.2s ease, transform 0.15s ease;
   color: var(--text-dark-secondary, #553E3C);
   font-weight: 500;
   position: relative;
@@ -604,13 +630,9 @@
   font-weight: 700;
 }
 
-.tabButtonActive:hover {
-  color: #120303;
-}
-
 .tabIcon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1rem;
+  height: 1rem;
   transition: transform 0.25s ease;
 }
 
@@ -618,20 +640,19 @@
   transform: scale(1.05);
 }
 
-/* Smooth Tab Content Transitions */
 .tabContentTransition {
-  animation: tabContentFadeSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: tabContentFadeSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .tabInlineTransition {
   display: inline-block;
-  animation: tabContentFadeSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: tabContentFadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes tabContentFadeSlide {
   0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(5px);
   }
   100% {
     opacity: 1;
@@ -639,9 +660,147 @@
   }
 }
 
-/* Continue with Google Button */
+/* ============================================================== */
+/* USERNAME INPUT SECTION                                         */
+/* ============================================================== */
+.usernameSection {
+  margin-bottom: 1.15rem;
+  position: relative;
+  z-index: 2;
+  text-align: left;
+}
+
+.usernameLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.usernameLabel {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dark-primary, #160303);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.usernameRequiredDot {
+  color: #E88C2B;
+}
+
+.usernameInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.usernamePrefix {
+  position: absolute;
+  left: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #E88C2B;
+  pointer-events: none;
+}
+
+.usernameInput {
+  width: 100%;
+  padding: 0.72rem 2.5rem 0.72rem 2.1rem;
+  border-radius: 0.875rem;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-light-medium, rgba(78, 4, 1, 0.14));
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark-primary, #160303);
+  outline: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.usernameInput:focus {
+  border-color: #E88C2B;
+  box-shadow: 0 0 0 3px rgba(232, 140, 43, 0.20), 0 4px 12px rgba(232, 140, 43, 0.12);
+}
+
+.usernameInputAvailable {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+}
+
+.usernameInputTaken {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
+.usernameStatusBadge {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(232, 140, 43, 0.25);
+  border-top-color: #E88C2B;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.statusIconAvailable {
+  width: 18px;
+  height: 18px;
+  color: #10B981;
+}
+
+.statusIconTaken {
+  width: 18px;
+  height: 18px;
+  color: #EF4444;
+}
+
+.usernameMessage {
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 500;
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.2s ease;
+}
+
+.usernameMessageAvailable {
+  color: #059669;
+}
+
+.usernameMessageTaken {
+  color: #DC2626;
+}
+
+.usernameMessageNeutral {
+  color: var(--text-dark-muted, #8C7370);
+}
+
+/* ============================================================== */
+/* GOOGLE OAUTH CTA                                               */
+/* ============================================================== */
 .ctaWrapper {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
   position: relative;
   z-index: 2;
 }
@@ -654,17 +813,17 @@
   color: var(--text-dark-primary, #160303);
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.875rem 1.5rem;
-  border-radius: 1.25rem;
+  font-size: 0.92rem;
+  padding: 0.78rem 1.25rem;
+  border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   border: 1px solid var(--border-light-medium, rgba(78, 4, 1, 0.14));
   box-shadow: 
-    0 6px 18px -2px rgba(78, 4, 1, 0.06), 
-    0 0 16px -2px rgba(232, 140, 43, 0.1);
+    0 4px 14px -2px rgba(78, 4, 1, 0.05), 
+    0 0 14px -2px rgba(232, 140, 43, 0.08);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -673,13 +832,39 @@
   background-color: #FFFFFF;
   border-color: rgba(232, 140, 43, 0.4);
   box-shadow: 
-    0 10px 24px -2px rgba(78, 4, 1, 0.08), 
-    0 0 24px rgba(232, 140, 43, 0.22);
-  transform: translateY(-1px) scale(1.01);
+    0 8px 20px -2px rgba(78, 4, 1, 0.08), 
+    0 0 20px rgba(232, 140, 43, 0.2);
+  transform: translateY(-1px) scale(1.008);
 }
 
 .googleAuthBtn:active {
   transform: translateY(0) scale(0.99);
+}
+
+.googleAuthBtnDisabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: grayscale(40%);
+}
+
+.googleAuthBtnDisabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--border-light-medium, rgba(78, 4, 1, 0.14)) !important;
+}
+
+.oauthPrereqHint {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: #9A3412;
+  text-align: center;
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
 }
 
 .btnSheen {
@@ -695,25 +880,27 @@
 }
 
 .googleIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.2rem;
+  height: 1.2rem;
   flex-shrink: 0;
 }
 
-/* Card Footer: Terms & Tab Switcher */
+/* ============================================================== */
+/* CARD FOOTER                                                    */
+/* ============================================================== */
 .cardFooter {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   position: relative;
   z-index: 2;
 }
 
 .legalText {
   font-family: var(--font-body);
-  font-size: 0.75rem;
-  line-height: 1.5;
+  font-size: 0.74rem;
+  line-height: 1.45;
   color: var(--text-dark-muted, #8C7370);
   max-width: 22rem;
   margin: 0 auto;
@@ -733,12 +920,12 @@
 
 .switchPrompt {
   font-family: var(--font-body);
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
   color: var(--text-dark-secondary, #553E3C);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
+  gap: 0.35rem;
   font-weight: 500;
 }
 
@@ -770,19 +957,19 @@
     opacity: 0.65;
   }
   25% {
-    transform: translate(40px, 18px) scale(1.25);
+    transform: translate(30px, 14px) scale(1.18);
     opacity: 0.85;
   }
   50% {
-    transform: translate(-30px, 10px) scale(0.88);
+    transform: translate(-25px, 8px) scale(0.9);
     opacity: 0.6;
   }
   75% {
-    transform: translate(20px, -16px) scale(1.2);
+    transform: translate(16px, -12px) scale(1.15);
     opacity: 0.8;
   }
   100% {
-    transform: translate(-10px, -8px) scale(1.12);
+    transform: translate(-8px, -6px) scale(1.08);
     opacity: 0.7;
   }
 }
@@ -793,27 +980,27 @@
     opacity: 0.55;
   }
   30% {
-    transform: translate(-45px, 22px) scale(1.3);
+    transform: translate(-35px, 16px) scale(1.22);
     opacity: 0.85;
   }
   60% {
-    transform: translate(25px, -18px) scale(0.85);
+    transform: translate(20px, -14px) scale(0.88);
     opacity: 0.5;
   }
   100% {
-    transform: translate(-18px, 14px) scale(1.18);
+    transform: translate(-14px, 10px) scale(1.12);
     opacity: 0.75;
   }
 }
 
 @keyframes cardOrbPulse {
   0%, 100% {
-    transform: scale(0.8);
-    opacity: 0.3;
+    transform: scale(0.85);
+    opacity: 0.35;
   }
   50% {
-    transform: scale(1.4);
-    opacity: 0.85;
+    transform: scale(1.25);
+    opacity: 0.8;
   }
 }
 
@@ -829,14 +1016,14 @@
 @keyframes cardAtmosphereBreath {
   0% {
     box-shadow: 
-      0 24px 60px -10px rgba(78, 4, 1, 0.08),
-      0 0 45px -5px rgba(232, 140, 43, 0.1),
+      0 20px 50px -10px rgba(78, 4, 1, 0.07),
+      0 0 40px -5px rgba(232, 140, 43, 0.1),
       inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
   }
   100% {
     box-shadow: 
-      0 24px 60px -10px rgba(78, 4, 1, 0.08),
-      0 0 75px 5px rgba(245, 150, 30, 0.22),
+      0 20px 50px -10px rgba(78, 4, 1, 0.07),
+      0 0 65px 5px rgba(245, 150, 30, 0.2),
       inset 0 1px 2px 0 rgba(255, 255, 255, 0.95);
   }
 }
@@ -847,12 +1034,12 @@
     opacity: 0.45;
   }
   30% {
-    transform: scale(1.3) translate(24px, 16px);
-    opacity: 0.75;
+    transform: scale(1.2) translate(18px, 12px);
+    opacity: 0.7;
   }
   70% {
-    transform: scale(0.95) translate(-10px, 8px);
-    opacity: 0.5;
+    transform: scale(0.96) translate(-8px, 6px);
+    opacity: 0.48;
   }
 }
 
@@ -862,11 +1049,11 @@
     opacity: 0.5;
   }
   40% {
-    transform: scale(1.28) translate(-22px, -18px);
-    opacity: 0.8;
+    transform: scale(1.2) translate(-16px, -14px);
+    opacity: 0.75;
   }
   80% {
-    transform: scale(0.92) translate(12px, 6px);
+    transform: scale(0.94) translate(10px, 4px);
     opacity: 0.42;
   }
 }
