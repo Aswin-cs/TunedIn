@@ -218,7 +218,7 @@ export default function HomePage() {
             </div>
 
             <div className={styles.topBarActions}>
-              {session?.user ? (
+              {status === "authenticated" && session?.user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Link href="/profile" className={styles.profileBadgeLink} title="Curator Profile">
                     <div className={styles.avatarMini}>
@@ -238,14 +238,14 @@ export default function HomePage() {
                     <span>Sign Out</span>
                   </button>
                 </div>
-              ) : (
+              ) : status === "unauthenticated" ? (
                 <Link href="/login" className={styles.authButton}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
                   <span>Sign In</span>
                 </Link>
-              )}
+              ) : null}
             </div>
           </div>
 

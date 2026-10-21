@@ -5,6 +5,8 @@ export interface IUser extends mongoose.Document {
     username: string;
     name?: string;
     avatar?: string;
+    bio?: string;
+    location?: string;
     createadAt: Date;
     createdAt?: Date;
     updatedAt: Date;
@@ -29,6 +31,14 @@ const userSchema = new mongoose.Schema<IUser>({
         default: "",
     },
     avatar: {
+        type: String,
+        default: "",
+    },
+    bio: {
+        type: String,
+        default: "",
+    },
+    location: {
         type: String,
         default: "",
     },

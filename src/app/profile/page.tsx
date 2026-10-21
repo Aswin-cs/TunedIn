@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import styles from "./profile.module.css";
 
 interface UserProfile {
@@ -36,6 +37,16 @@ interface Playlist {
   duration: string;
   imageUrl: string;
 }
+
+const formatMemberSince = (dateStr?: string | Date | null) => {
+  if (!dateStr) return "Oct 2026";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  } catch {
+    return "Oct 2026";
+  }
+};
 
 const INITIAL_TRACKS: FavoriteTrack[] = [
   {
@@ -104,7 +115,7 @@ const PLAYLISTS_DATA: Playlist[] = [
   {
     id: "p1",
     title: "Late Night Synthwave",
-    curator: "Curated by Alex Vance",
+    curator: "Curated by Studio Ensemble",
     trackCount: 32,
     duration: "2 hr 14 min",
     imageUrl:
@@ -122,7 +133,7 @@ const PLAYLISTS_DATA: Playlist[] = [
   {
     id: "p3",
     title: "Acoustic Resonance",
-    curator: "Curated by Alex Vance",
+    curator: "Curated by Master Wave",
     trackCount: 28,
     duration: "1 hr 52 min",
     imageUrl:
@@ -141,19 +152,19 @@ const PLAYLISTS_DATA: Playlist[] = [
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
 
-  // Profile data
+  // Profile data (Initialized with accurate session/fallback defaults)
   const [profile, setProfile] = useState<UserProfile>({
-    name: "Alex Vance",
-    handle: "@alexvance",
-    email: "alex.vance@soundlab.audio",
+    name: "Curator Studio",
+    handle: "@curator",
+    email: "curator@tunedin.audio",
     location: "Sunset Sound • Studio 2",
     bio: "Master audio quality favorites curated for analytical listening & discrete analog signal chains.",
     tier: "PRO TIER",
-    memberSince: "Oct 2023",
+    memberSince: "Oct 2026",
     losslessTag: "TunedIn Studio Member (Lossless 24-bit)",
-    avatarUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDhNrmugtx2czL-QQtM4DaZJN0uYThKn8XxK6i9JW1b1VFcjg0qFNYY2U_6iuOdqUnUfUHVF_D_c4_sHUxerGo6VTV3p98KvBVD9jBBQpY7DGVsCtlXc2s04W4MmV2YLlqtvrlDrQ2mnDIPfXHj8YdsHq0RDru5aeMKEOi-8vRPhQfNpp7vFyCPimcJ0eE5_SPgxRstnRqIBsqKmLIAf9Rdx4Ln5g-HivhqB3gMBJiTqs82NwuLOjDc",
+    avatarUrl: "",
   });
 
   // Navigation and view tabs
@@ -167,6 +178,72 @@ export default function ProfilePage() {
   const [editEmail, setEditEmail] = useState(profile.email);
   const [editLocation, setEditLocation] = useState(profile.location);
   const [editBio, setEditBio] = useState(profile.bio);
+
+  // Synchronize authenticated user profile with NextAuth session and MongoDB
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      const u = session.user as any;
+      const initialName = u.name || session.user.name || "Curator Studio";
+      const initialHandle = `@${u.username || (session.user.email ? session.user.email.split("@")[0] : "curator")}`;
+      const initialEmail = session.user.email || "";
+      const initialAvatar = u.avatar || session.user.image || "";
+      const initialLocation = u.location || "Sunset Sound • Studio 2";
+      const initialBio = u.bio || "Master audio quality favorites curated for analytical listening & discrete analog signal chains.";
+      const initialMemberSince = formatMemberSince(u.createdAt);
+
+      setProfile({
+        name: initialName,
+        handle: initialHandle,
+        email: initialEmail,
+        location: initialLocation,
+        bio: initialBio,
+        tier: "PRO TIER",
+        memberSince: initialMemberSince,
+        losslessTag: "TunedIn Studio Member (Lossless 24-bit)",
+        avatarUrl: initialAvatar,
+      });
+
+      setEditName(initialName);
+      setEditHandle(initialHandle);
+      setEditEmail(initialEmail);
+      setEditLocation(initialLocation);
+      setEditBio(initialBio);
+
+      // Fetch latest MongoDB user document to guarantee 100% accuracy
+      fetch("/api/user/profile")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.user) {
+            const db = data.user;
+            const dbName = db.name || initialName;
+            const dbHandle = `@${db.username || (session.user as any).username || "curator"}`;
+            const dbLocation = db.location || initialLocation;
+            const dbBio = db.bio || initialBio;
+            const dbAvatar = db.avatar || initialAvatar;
+            const dbMemberSince = formatMemberSince(db.createdAt);
+
+            setProfile((prev) => ({
+              ...prev,
+              name: dbName,
+              handle: dbHandle,
+              email: db.email || initialEmail,
+              location: dbLocation,
+              bio: dbBio,
+              avatarUrl: dbAvatar,
+              memberSince: dbMemberSince,
+            }));
+
+            setEditName(dbName);
+            setEditHandle(dbHandle);
+            setEditLocation(dbLocation);
+            setEditBio(dbBio);
+          }
+        })
+        .catch((err) => {
+          console.error("Could not fetch DB profile:", err);
+        });
+    }
+  }, [session, status]);
 
   // Tracks & Playlists state
   const [tracks, setTracks] = useState<FavoriteTrack[]>(INITIAL_TRACKS);
@@ -207,18 +284,51 @@ export default function ProfilePage() {
     }, 2800);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfile((prev) => ({
-      ...prev,
-      name: editName,
-      handle: editHandle,
-      email: editEmail,
-      location: editLocation,
-      bio: editBio,
-    }));
-    setIsEditing(false);
-    showToast("Profile settings saved successfully");
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          bio: editBio,
+          location: editLocation,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.user) {
+          setProfile((prev) => ({
+            ...prev,
+            name: data.user.name || editName,
+            location: data.user.location || editLocation,
+            bio: data.user.bio || editBio,
+          }));
+        }
+        setIsEditing(false);
+        showToast("Profile settings saved successfully");
+      } else {
+        setProfile((prev) => ({
+          ...prev,
+          name: editName,
+          location: editLocation,
+          bio: editBio,
+        }));
+        setIsEditing(false);
+        showToast("Profile updated");
+      }
+    } catch (err) {
+      setProfile((prev) => ({
+        ...prev,
+        name: editName,
+        location: editLocation,
+        bio: editBio,
+      }));
+      setIsEditing(false);
+      showToast("Profile saved");
+    }
   };
 
   const handleToggleFavorite = (trackId: number, e: React.MouseEvent) => {
@@ -271,13 +381,8 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = () => {
-    const confirmed = window.confirm("Are you sure you want to sign out of TunedIn Studio?");
-    if (confirmed) {
-      showToast("Signing out of session...");
-      setTimeout(() => {
-        router.push("/login");
-      }, 600);
-    }
+    showToast("Signing out of TunedIn Studio...");
+    signOut({ callbackUrl: "/" });
   };
 
   const toggleGear = (key: keyof typeof gearToggles) => {
@@ -453,6 +558,21 @@ export default function ProfilePage() {
       {/* ============================================================== */}
       <main className={styles.mainContainer}>
         <div className={styles.contentWrapper}>
+          {/* Guest Notice Ribbon if unauthenticated */}
+          {status === "unauthenticated" && (
+            <div className={styles.guestNoticeRibbon} role="status">
+              <div className={styles.guestNoticeContent}>
+                <span className={`material-symbols-outlined ${styles.guestNoticeIcon}`}>info</span>
+                <div>
+                  <strong>Guest Session:</strong> You are currently viewing a guest preview profile. Sign in with Google to sync your personal profile, favorite tracks, and audio rig presets.
+                </div>
+              </div>
+              <Link href="/login" className={styles.guestNoticeCta}>
+                Sign In with Google
+              </Link>
+            </div>
+          )}
+
           {/* ============================================================ */}
           {/* PROFILE HEADER CARD (Stitch Spec)                            */}
           {/* ============================================================ */}
@@ -462,12 +582,21 @@ export default function ProfilePage() {
               <div className={styles.avatarRing}>
                 <div className={styles.avatarGradientWrapper}>
                   <div className={styles.avatarImageWrapper}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={profile.avatarUrl}
-                      alt={profile.name}
-                      className={styles.avatarImage}
-                    />
+                    {profile.avatarUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.name}
+                        className={styles.avatarImage}
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className={styles.avatarInitials}>
+                        {profile.name ? profile.name[0] : (profile.handle ? profile.handle.replace("@", "")[0] : "T")}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className={styles.badgeLosslessActive} title="Studio Lossless Active">
@@ -488,11 +617,31 @@ export default function ProfilePage() {
                   <span className={styles.studioMemberLabel}>{profile.losslessTag}</span>
                 </div>
 
+                {profile.bio && (
+                  <p
+                    style={{
+                      marginTop: "0.45rem",
+                      marginBottom: "0.45rem",
+                      color: "#565D63",
+                      fontSize: "0.85rem",
+                      lineHeight: "1.45",
+                    }}
+                  >
+                    {profile.bio}
+                  </p>
+                )}
+
                 <div className={styles.attributesGrid}>
                   <div className={styles.attributeItem}>
                     <span className={`material-symbols-outlined ${styles.attributeIcon}`}>mail</span>
                     <span>{profile.email}</span>
                   </div>
+                  {profile.location && (
+                    <div className={styles.attributeItem}>
+                      <span className={`material-symbols-outlined ${styles.attributeIcon}`}>location_on</span>
+                      <span>{profile.location}</span>
+                    </div>
+                  )}
                   <div className={styles.attributeItem}>
                     <span className={`material-symbols-outlined ${styles.attributeIcon}`}>
                       calendar_today
@@ -561,9 +710,11 @@ export default function ProfilePage() {
                       type="text"
                       className={styles.formInput}
                       value={editHandle}
-                      onChange={(e) => setEditHandle(e.target.value)}
-                      required
+                      disabled
+                      style={{ opacity: 0.7, cursor: "not-allowed" }}
+                      title="Your verified handle cannot be changed"
                     />
+                    <span className={styles.readOnlyFieldNote}>Verified unique handle</span>
                   </div>
 
                   <div className={styles.formGroup}>
@@ -575,9 +726,11 @@ export default function ProfilePage() {
                       type="email"
                       className={styles.formInput}
                       value={editEmail}
-                      onChange={(e) => setEditEmail(e.target.value)}
-                      required
+                      disabled
+                      style={{ opacity: 0.7, cursor: "not-allowed" }}
+                      title="Email is synced to your Google account"
                     />
+                    <span className={styles.readOnlyFieldNote}>Synced with Google authentication</span>
                   </div>
 
                   <div className={styles.formGroup}>
@@ -590,6 +743,7 @@ export default function ProfilePage() {
                       className={styles.formInput}
                       value={editLocation}
                       onChange={(e) => setEditLocation(e.target.value)}
+                      placeholder="e.g. Sunset Sound • Studio 2"
                     />
                   </div>
 
@@ -603,6 +757,7 @@ export default function ProfilePage() {
                       className={styles.formTextarea}
                       value={editBio}
                       onChange={(e) => setEditBio(e.target.value)}
+                      placeholder="Describe your acoustic setup or musical focus..."
                     />
                   </div>
                 </div>

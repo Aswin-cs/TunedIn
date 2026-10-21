@@ -80,6 +80,11 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             token.username = dbUser.username;
             token.userId = (dbUser as any)._id?.toString();
+            token.name = dbUser.name || token.name;
+            (token as any).avatar = dbUser.avatar || token.picture;
+            (token as any).bio = dbUser.bio || "";
+            (token as any).location = dbUser.location || "";
+            (token as any).createdAt = (dbUser.createdAt || dbUser.createadAt)?.toISOString();
           }
         } catch (err) {
           console.error("Error attaching user to JWT:", err);
@@ -90,8 +95,13 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (session?.user) {
-        (session.user as any).username = token.username || (session.user.email ? session.user.email.split("@")[0] : "studio_guest");
-        (session.user as any).id = token.userId || token.sub;
+        (session.user as any).username = (token as any).username || (session.user.email ? session.user.email.split("@")[0] : "studio_guest");
+        (session.user as any).id = (token as any).userId || token.sub;
+        (session.user as any).name = (token as any).name || session.user.name;
+        (session.user as any).avatar = (token as any).avatar || session.user.image;
+        (session.user as any).bio = (token as any).bio || "";
+        (session.user as any).location = (token as any).location || "";
+        (session.user as any).createdAt = (token as any).createdAt || null;
       }
       return session;
     },
