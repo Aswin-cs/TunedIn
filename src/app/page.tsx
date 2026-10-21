@@ -374,7 +374,7 @@ export default function HomePage() {
                             <Link
                               href={`/song/${track.id}`}
                               className={styles.trackTitleText}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               title="Open dedicated song player"
                             >
                               {track.title}
@@ -382,7 +382,7 @@ export default function HomePage() {
                             <Link
                               href={`/song/${track.id}`}
                               className={styles.openSongLink}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               title="Open Song View"
                             >
                               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
