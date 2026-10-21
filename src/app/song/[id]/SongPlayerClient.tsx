@@ -129,22 +129,22 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   );
 
   const currentTheme = currentTrack.theme || {
-    name: "Warm Amber & Honey Ivory",
-    accent: "#D97706",
-    accentHover: "#B45309",
-    accentGlow: "rgba(217, 119, 6, 0.28)",
-    accentSubtle: "rgba(217, 119, 6, 0.10)",
-    ambientTop: "rgba(245, 158, 11, 0.18)",
-    ambientBottom: "rgba(232, 140, 43, 0.10)",
-    canvas: "#FAF8F5",
-    surfaceGlass: "rgba(255, 255, 255, 0.90)",
-    cardBg: "linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 244, 237, 0.88) 100%)",
-    vinylLabel: "radial-gradient(circle, #F59E0B 0%, #D97706 60%, #92400E 100%)",
-    vinylBorder: "#FFFFFF",
-    highlightText: "#B45309",
-    textHigh: "#1C120C",
-    textMedium: "#5C4A42",
-    textMuted: "#8C776D",
+    name: "Golden Amber & Warm Linen",
+    accent: "#ffb86d",
+    accentHover: "#e88c2b",
+    accentGlow: "rgba(255, 184, 109, 0.35)",
+    accentSubtle: "rgba(255, 184, 109, 0.12)",
+    ambientTop: "rgba(255, 184, 109, 0.18)",
+    ambientBottom: "rgba(255, 220, 189, 0.15)",
+    canvas: "#FFFFFF",
+    surfaceGlass: "rgba(255, 255, 255, 0.85)",
+    cardBg: "rgba(255, 255, 255, 0.92)",
+    vinylLabel: "radial-gradient(circle, #ffdcbd 0%, #ffb86d 55%, #d97706 100%)",
+    vinylBorder: "rgba(255, 255, 255, 0.90)",
+    highlightText: "#C2410C",
+    textHigh: "#2A1608",
+    textMedium: "#6E5343",
+    textMuted: "#9C8172",
   };
 
   const dynamicThemeStyles = {
