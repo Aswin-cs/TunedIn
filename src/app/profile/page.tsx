@@ -178,6 +178,14 @@ export default function ProfilePage() {
   const [editEmail, setEditEmail] = useState(profile.email);
   const [editLocation, setEditLocation] = useState(profile.location);
   const [editBio, setEditBio] = useState(profile.bio);
+  const [editAvatarUrl, setEditAvatarUrl] = useState(profile.avatarUrl);
+  const [avatarError, setAvatarError] = useState(false);
+  const [pillAvatarError, setPillAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+    setPillAvatarError(false);
+  }, [profile.avatarUrl]);
 
   // Synchronize authenticated user profile with NextAuth session and MongoDB
   useEffect(() => {
@@ -208,6 +216,7 @@ export default function ProfilePage() {
       setEditEmail(initialEmail);
       setEditLocation(initialLocation);
       setEditBio(initialBio);
+      setEditAvatarUrl(initialAvatar);
 
       // Fetch latest MongoDB user document to guarantee 100% accuracy
       fetch("/api/user/profile")
@@ -237,6 +246,7 @@ export default function ProfilePage() {
             setEditHandle(dbHandle);
             setEditLocation(dbLocation);
             setEditBio(dbBio);
+            setEditAvatarUrl(dbAvatar);
           }
         })
         .catch((err) => {
@@ -294,6 +304,7 @@ export default function ProfilePage() {
           name: editName,
           bio: editBio,
           location: editLocation,
+          avatar: editAvatarUrl,
         }),
       });
 
@@ -305,6 +316,7 @@ export default function ProfilePage() {
             name: data.user.name || editName,
             location: data.user.location || editLocation,
             bio: data.user.bio || editBio,
+            avatarUrl: data.user.avatar || editAvatarUrl,
           }));
         }
         setIsEditing(false);
@@ -315,6 +327,7 @@ export default function ProfilePage() {
           name: editName,
           location: editLocation,
           bio: editBio,
+          avatarUrl: editAvatarUrl,
         }));
         setIsEditing(false);
         showToast("Profile updated");
@@ -325,6 +338,7 @@ export default function ProfilePage() {
         name: editName,
         location: editLocation,
         bio: editBio,
+        avatarUrl: editAvatarUrl,
       }));
       setIsEditing(false);
       showToast("Profile saved");
@@ -546,9 +560,24 @@ export default function ProfilePage() {
           </button>
 
           <div className={styles.userAvatarPill} title={profile.name}>
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-              person
-            </span>
+            {profile.avatarUrl && !pillAvatarError ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className={styles.userAvatarPillImg}
+                referrerPolicy="no-referrer"
+                onError={() => setPillAvatarError(true)}
+              />
+            ) : (
+              <span>
+                {profile.name
+                  ? profile.name.trim()[0].toUpperCase()
+                  : profile.handle
+                  ? profile.handle.replace("@", "").trim()[0].toUpperCase()
+                  : "U"}
+              </span>
+            )}
           </div>
         </div>
       </header>
@@ -582,19 +611,22 @@ export default function ProfilePage() {
               <div className={styles.avatarRing}>
                 <div className={styles.avatarGradientWrapper}>
                   <div className={styles.avatarImageWrapper}>
-                    {profile.avatarUrl ? (
+                    {profile.avatarUrl && !avatarError ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={profile.avatarUrl}
                         alt={profile.name}
                         className={styles.avatarImage}
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
+                        referrerPolicy="no-referrer"
+                        onError={() => setAvatarError(true)}
                       />
                     ) : (
-                      <div className={styles.avatarInitials}>
-                        {profile.name ? profile.name[0] : (profile.handle ? profile.handle.replace("@", "")[0] : "T")}
+                      <div className={styles.avatarFallback}>
+                        {profile.name
+                          ? profile.name.trim()[0].toUpperCase()
+                          : profile.handle
+                          ? profile.handle.replace("@", "").trim()[0].toUpperCase()
+                          : "T"}
                       </div>
                     )}
                   </div>
@@ -731,6 +763,53 @@ export default function ProfilePage() {
                       title="Email is synced to your Google account"
                     />
                     <span className={styles.readOnlyFieldNote}>Synced with Google authentication</span>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label htmlFor="edit-avatar" className={styles.formLabel}>
+                      Profile Picture URL
+                    </label>
+                    <input
+                      id="edit-avatar"
+                      type="url"
+                      className={styles.formInput}
+                      value={editAvatarUrl}
+                      onChange={(e) => setEditAvatarUrl(e.target.value)}
+                      placeholder="https://... (Direct image or Google avatar URL)"
+                    />
+                    <div className={styles.avatarPresetsRow}>
+                      {session?.user?.image && (
+                        <button
+                          type="button"
+                          className={styles.avatarPresetBtn}
+                          onClick={() => setEditAvatarUrl(session.user?.image || "")}
+                        >
+                          Google Photo
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={styles.avatarPresetBtn}
+                        onClick={() => setEditAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop")}
+                      >
+                        Studio 1
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.avatarPresetBtn}
+                        onClick={() => setEditAvatarUrl("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop")}
+                      >
+                        Studio 2
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.avatarPresetBtn}
+                        onClick={() => setEditAvatarUrl("https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop")}
+                      >
+                        Studio 3
+                      </button>
+                    </div>
+                    <span className={styles.readOnlyFieldNote}>Custom image, Google photo, or select a studio preset</span>
                   </div>
 
                   <div className={styles.formGroup}>

@@ -290,6 +290,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
+  overflow: hidden;
   background: #a63500;
   display: flex;
   align-items: center;
@@ -298,6 +299,13 @@
   font-size: 0.875rem;
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(166, 53, 0, 0.2);
+}
+
+.userAvatarPillImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* ==============================================================
@@ -1640,4 +1648,32 @@
   color: #8C7370;
   margin-top: 0.25rem;
 }
+
+.avatarPresetsRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.avatarPresetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  background: #eaedff;
+  border: 1px solid #dae2fd;
+  color: #131b2e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avatarPresetBtn:hover {
+  background: #dae2fd;
+  color: #a63500;
+}
+
 

@@ -58,7 +58,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, bio, location } = body;
+    const { name, bio, location, avatar } = body;
 
     await connectDb();
     const updatedUser = await User.findOneAndUpdate(
@@ -68,6 +68,7 @@ export async function PUT(req: NextRequest) {
           ...(typeof name === "string" ? { name: name.trim() } : {}),
           ...(typeof bio === "string" ? { bio: bio.trim() } : {}),
           ...(typeof location === "string" ? { location: location.trim() } : {}),
+          ...(typeof avatar === "string" ? { avatar: avatar.trim() } : {}),
           updatedAt: new Date(),
         },
       },

@@ -7,8 +7,8 @@ import { cookies } from "next/headers";
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "PLACEHOLDER_GOOGLE_CLIENT_ID",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "PLACEHOLDER_GOOGLE_CLIENT_SECRET",
+      clientId: (process.env.GOOGLE_CLIENT_ID || "PLACEHOLDER_GOOGLE_CLIENT_ID").trim(),
+      clientSecret: (process.env.GOOGLE_CLIENT_SECRET || "PLACEHOLDER_GOOGLE_CLIENT_SECRET").trim(),
     }),
   ],
   session: {
@@ -62,6 +62,19 @@ export const authOptions: NextAuthOptions = {
               createdAt: new Date(),
               updatedAt: new Date(),
             });
+          } else {
+            // Keep MongoDB user synchronized with Google profile avatar & name
+            const updates: Record<string, any> = {};
+            if (user.image && (!existingUser.avatar || existingUser.avatar !== user.image)) {
+              updates.avatar = user.image;
+            }
+            if (user.name && !existingUser.name) {
+              updates.name = user.name;
+            }
+            if (Object.keys(updates).length > 0) {
+              updates.updatedAt = new Date();
+              await User.updateOne({ email }, { $set: updates });
+            }
           }
           return true;
         } catch (err) {
@@ -73,6 +86,16 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user }) {
+      if (user) {
+        if (user.image) {
+          token.picture = user.image;
+          (token as any).avatar = user.image;
+        }
+        if (user.name) {
+          token.name = user.name;
+        }
+      }
+
       if (token?.email) {
         try {
           await connectDb();
@@ -81,7 +104,18 @@ export const authOptions: NextAuthOptions = {
             token.username = dbUser.username;
             token.userId = (dbUser as any)._id?.toString();
             token.name = dbUser.name || token.name;
-            (token as any).avatar = dbUser.avatar || token.picture;
+            
+            const resolvedAvatar = dbUser.avatar || (token as any).avatar || token.picture;
+            (token as any).avatar = resolvedAvatar;
+
+            // If DB user didn't have an avatar yet but token has one, save to DB
+            if (!dbUser.avatar && resolvedAvatar) {
+              await User.updateOne(
+                { email: token.email.toLowerCase() },
+                { $set: { avatar: resolvedAvatar, updatedAt: new Date() } }
+              );
+            }
+
             (token as any).bio = dbUser.bio || "";
             (token as any).location = dbUser.location || "";
             (token as any).createdAt = (dbUser.createdAt || dbUser.createadAt)?.toISOString();

@@ -25,6 +25,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [playerAvatarFailed, setPlayerAvatarFailed] = useState<boolean>(false);
 
   // Adjust state during render when initialTrack prop changes (e.g., URL navigation)
   const [prevTrackId, setPrevTrackId] = useState<number>(initialTrack.id);
@@ -244,9 +245,20 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
           </button>
 
           <Link href="/profile" className={styles.actionIconBtn} title="My Acoustic Profile" aria-label="My Acoustic Profile">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            {session?.user && ((session.user as any).avatar || session.user.image) && !playerAvatarFailed ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={((session.user as any).avatar || session.user.image) as string}
+                alt="Profile"
+                referrerPolicy="no-referrer"
+                style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover" }}
+                onError={() => setPlayerAvatarFailed(true)}
+              />
+            ) : (
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
           </Link>
         </div>
       </header>

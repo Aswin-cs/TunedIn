@@ -407,6 +407,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  overflow: hidden;
   background: radial-gradient(circle, #F59E0B 0%, #D97706 70%, #92400E 100%);
   color: #FFFFFF;
   display: flex;
@@ -415,6 +416,13 @@
   font-size: 0.6875rem;
   font-weight: 800;
   box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3);
+}
+
+.avatarMiniImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .profileNameMini {

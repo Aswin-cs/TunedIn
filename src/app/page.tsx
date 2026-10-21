@@ -48,6 +48,7 @@ export default function HomePage() {
   const [isLiked, setIsLiked] = useState<boolean>(true);
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
+  const [navAvatarFailed, setNavAvatarFailed] = useState<boolean>(false);
   const [activeChip, setActiveChip] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeNav, setActiveNav] = useState<string>("home");
@@ -222,7 +223,22 @@ export default function HomePage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Link href="/profile" className={styles.profileBadgeLink} title="Curator Profile">
                     <div className={styles.avatarMini}>
-                      {(session.user as any).username ? (session.user as any).username.slice(0, 2).toUpperCase() : "TI"}
+                      {((session.user as any).avatar || session.user.image) && !navAvatarFailed ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={((session.user as any).avatar || session.user.image) as string}
+                          alt="Profile"
+                          className={styles.avatarMiniImg}
+                          referrerPolicy="no-referrer"
+                          onError={() => setNavAvatarFailed(true)}
+                        />
+                      ) : (session.user as any).username ? (
+                        (session.user as any).username.slice(0, 2).toUpperCase()
+                      ) : session.user.name ? (
+                        session.user.name.slice(0, 2).toUpperCase()
+                      ) : (
+                        "TI"
+                      )}
                     </div>
                     <span className={styles.profileNameMini}>
                       @{(session.user as any).username || session.user.name || "Curator"}
