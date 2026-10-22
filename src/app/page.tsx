@@ -1,39 +1,49 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { Track, TRACKS_DATA } from "@/data/tracks";
 import { ISong } from "@/models/song.model";
 import { mapSongToTrack } from "@/lib/songAdapter";
+import { useMusicPlayer } from "@/context/MusicPlayerContext";
 import styles from "./page.module.css";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
 
+  const {
+    currentTrack,
+    isPlaying,
+    currentTimeSec,
+    progress,
+    volume,
+    isMuted,
+    isShuffle,
+    isRepeat,
+    isLiked,
+    playTrack,
+    togglePlay,
+    seekPercent,
+    nextTrack,
+    prevTrack,
+    setVolume,
+    toggleMute,
+    toggleShuffle,
+    toggleRepeat,
+    toggleLike,
+    setQueue,
+  } = useMusicPlayer();
+
   // Songs fetched from MongoDB (song.model.ts)
   const [dbSongs, setDbSongs] = useState<Track[]>([]);
   const [isLoadingSongs, setIsLoadingSongs] = useState<boolean>(true);
   const [dbError, setDbError] = useState<string | null>(null);
-
-  // Playback state
-  const [currentTrack, setCurrentTrack] = useState<Track>(TRACKS_DATA[0]);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0);
-  const [progress, setProgress] = useState<number>(0); // 0-100%
-  const [volume, setVolume] = useState<number>(80);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [isLiked, setIsLiked] = useState<boolean>(false);
-  const [isShuffle, setIsShuffle] = useState<boolean>(false);
-  const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [navAvatarFailed, setNavAvatarFailed] = useState<boolean>(false);
   const [activeChip, setActiveChip] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeNav, setActiveNav] = useState<string>("home");
-
-  // Audio HTML element ref
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 1. Fetch songs and their details from /api/songs (models/song.model.ts)
   useEffect(() => {
@@ -52,9 +62,6 @@ export default function HomePage() {
             mapSongToTrack(s)
           );
           setDbSongs(mappedTracks);
-          if (mappedTracks.length > 0) {
-            setCurrentTrack(mappedTracks[0]);
-          }
         }
       } catch (err) {
         console.error("Error fetching songs from MongoDB:", err);
@@ -81,6 +88,13 @@ export default function HomePage() {
     // Put MongoDB songs first, followed by curated tracks that don't clash by ID
     return [...dbSongs, ...TRACKS_DATA];
   }, [dbSongs]);
+
+  // Keep global player queue synced with combinedTracks
+  useEffect(() => {
+    if (combinedTracks.length > 0) {
+      setQueue(combinedTracks);
+    }
+  }, [combinedTracks, setQueue]);
 
   // Extract all unique genres for filter chips
   const dynamicChips = useMemo(() => {
@@ -118,91 +132,39 @@ export default function HomePage() {
     });
   }, [combinedTracks, searchQuery, activeChip]);
 
-  // Audio element event listeners & sync
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (currentTrack.audio_url) {
-      if (audio.src !== currentTrack.audio_url) {
-        audio.src = currentTrack.audio_url;
-        audio.load();
-      }
-      if (isPlaying) {
-        audio.play().catch(() => {});
-      } else {
-        audio.pause();
-      }
-    } else {
-      audio.pause();
-    }
-  }, [currentTrack, isPlaying]);
-
-  // Volume & Mute handling on <audio>
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-    }
-  }, [volume, isMuted]);
-
-  // Fallback ticker for tracks without real audio_url
-  useEffect(() => {
-    if (!isPlaying || currentTrack.audio_url) return;
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (isRepeat) return 0;
-          return 100;
-        }
-        return prev + 0.5;
-      });
-      setCurrentTimeSec((prev) =>
-        prev >= currentTrack.durationSeconds ? 0 : prev + 1
-      );
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack, isRepeat]);
-
   // Track select handler
   const handleTrackSelect = (track: Track) => {
-    setCurrentTrack(track);
-    setIsPlaying(true);
-    setProgress(0);
-    setCurrentTimeSec(0);
-    if (audioRef.current && track.audio_url) {
-      audioRef.current.src = track.audio_url;
-      audioRef.current.play().catch(() => {});
-    }
+    playTrack(track, true);
   };
 
   const handleNextTrack = () => {
-    const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
-    let nextIndex = (currentIndex + 1) % filteredTracks.length;
-    if (isShuffle) {
-      nextIndex = Math.floor(Math.random() * filteredTracks.length);
+    if (filteredTracks.length > 1) {
+      const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
+      let nextIndex = (currentIndex + 1) % filteredTracks.length;
+      if (isShuffle) {
+        nextIndex = Math.floor(Math.random() * filteredTracks.length);
+      }
+      playTrack(filteredTracks[nextIndex], true);
+    } else {
+      nextTrack();
     }
-    handleTrackSelect(filteredTracks[nextIndex]);
   };
 
   const handlePrevTrack = () => {
-    const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
-    const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
-    handleTrackSelect(filteredTracks[prevIndex]);
+    if (filteredTracks.length > 1) {
+      const currentIndex = filteredTracks.findIndex((t) => t.id === currentTrack.id);
+      const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
+      playTrack(filteredTracks[prevIndex], true);
+    } else {
+      prevTrack();
+    }
   };
 
   const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetProgress = ratio * 100;
-    setProgress(targetProgress);
-
-    const targetSeconds = Math.round(ratio * (currentTrack.durationSeconds || 180));
-    setCurrentTimeSec(targetSeconds);
-
-    if (audioRef.current && currentTrack.audio_url && audioRef.current.duration) {
-      audioRef.current.currentTime = ratio * audioRef.current.duration;
-    }
+    seekPercent(ratio * 100);
   };
 
   const formatSeconds = (sec: number) => {
@@ -213,27 +175,6 @@ export default function HomePage() {
 
   return (
     <div className={styles.appContainer}>
-      {/* Hidden real audio element for direct Cloudinary MP3/FLAC streaming */}
-      <audio
-        ref={audioRef}
-        onTimeUpdate={() => {
-          if (audioRef.current && audioRef.current.duration) {
-            const current = audioRef.current.currentTime;
-            const dur = audioRef.current.duration;
-            setCurrentTimeSec(Math.floor(current));
-            setProgress((current / dur) * 100);
-          }
-        }}
-        onEnded={() => {
-          if (isRepeat && audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-          } else {
-            handleNextTrack();
-          }
-        }}
-      />
-
       <div className={styles.studioLayout}>
         {/* ============================================================== */}
         {/* 1. LEFT COLUMN: PRIMARY NAVIGATION & LIBRARY HUB               */}
@@ -466,7 +407,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   className={styles.heroPlayBtn}
-                  onClick={() => handleTrackSelect(currentTrack)}
+                  onClick={() => (isPlaying ? togglePlay() : handleTrackSelect(currentTrack))}
                 >
                   {isPlaying ? (
                     <>
@@ -488,7 +429,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   className={styles.heroSecondaryBtn}
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={toggleLike}
                   title="Save to favorites"
                 >
                   <svg width="18" height="18" fill={isLiked ? "#E88C2B" : "none"} viewBox="0 0 24 24" stroke="currentColor">
@@ -830,7 +771,7 @@ export default function HomePage() {
           <button
             type="button"
             className={`${styles.likeBtn} ${isLiked ? styles.likeBtnActive : ""}`}
-            onClick={() => setIsLiked(!isLiked)}
+            onClick={toggleLike}
             aria-label="Toggle favorite"
           >
             <svg width="18" height="18" fill={isLiked ? "#E88C2B" : "none"} viewBox="0 0 24 24" stroke="currentColor">
@@ -846,7 +787,7 @@ export default function HomePage() {
             <button
               type="button"
               className={`${styles.dockIconBtn} ${isShuffle ? styles.dockIconBtnActive : ""}`}
-              onClick={() => setIsShuffle(!isShuffle)}
+              onClick={toggleShuffle}
               title="Shuffle"
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -870,7 +811,7 @@ export default function HomePage() {
             <button
               type="button"
               className={styles.playPauseCircle}
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={togglePlay}
               title={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
@@ -900,7 +841,7 @@ export default function HomePage() {
             <button
               type="button"
               className={`${styles.dockIconBtn} ${isRepeat ? styles.dockIconBtnActive : ""}`}
-              onClick={() => setIsRepeat(!isRepeat)}
+              onClick={toggleRepeat}
               title="Repeat"
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -939,7 +880,7 @@ export default function HomePage() {
           <button
             type="button"
             className={styles.dockIconBtn}
-            onClick={() => setIsMuted((m) => !m)}
+            onClick={toggleMute}
             title={isMuted || volume === 0 ? "Unmute" : "Mute"}
           >
             {isMuted || volume === 0 ? (
@@ -960,7 +901,6 @@ export default function HomePage() {
               const rect = e.currentTarget.getBoundingClientRect();
               const clickX = e.clientX - rect.left;
               setVolume(Math.max(0, Math.min(100, Math.round((clickX / rect.width) * 100))));
-              setIsMuted(false);
             }}
           >
             <div

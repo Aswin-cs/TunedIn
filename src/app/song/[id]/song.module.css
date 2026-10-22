@@ -437,21 +437,62 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.2rem;
+  padding: 0;
   color: #1a0a03;
   position: relative;
   z-index: 2;
+  overflow: hidden;
   transition: all 0.5s ease;
+}
+
+.vinylPosterImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.vinylPosterOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .vinylSpindleHole {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #0d0202;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.95),
+    0 0 3px rgba(0, 0, 0, 0.6);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.labelFallbackContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.2rem;
+  position: relative;
 }
 
 .labelBrand {

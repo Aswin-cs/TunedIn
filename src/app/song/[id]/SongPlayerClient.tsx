@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Track, TRACKS_DATA } from "@/data/tracks";
+import { Track } from "@/data/tracks";
+import { useMusicPlayer } from "@/context/MusicPlayerContext";
 import styles from "./song.module.css";
 
 interface SongPlayerClientProps {
@@ -14,46 +15,59 @@ interface SongPlayerClientProps {
 
 export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps) {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const [currentTrack, setCurrentTrack] = useState<Track>(initialTrack);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [currentTimeSec, setCurrentTimeSec] = useState<number>(34);
-  const [volume, setVolume] = useState<number>(80);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [isLiked, setIsLiked] = useState<boolean>(false);
-  const [isShuffle, setIsShuffle] = useState<boolean>(false);
-  const [isRepeat, setIsRepeat] = useState<boolean>(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
+  const { data: session } = useSession();
+
+  const {
+    currentTrack: globalTrack,
+    isPlaying,
+    currentTimeSec,
+    durationSec,
+    progress: progressPercent,
+    volume,
+    isMuted,
+    isShuffle,
+    isRepeat,
+    playbackSpeed,
+    isLiked,
+    playTrack,
+    togglePlay,
+    seekPercent,
+    nextTrack,
+    prevTrack,
+    setVolume,
+    toggleMute,
+    toggleShuffle,
+    toggleRepeat,
+    setPlaybackSpeed,
+    toggleLike,
+  } = useMusicPlayer();
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [playerAvatarFailed, setPlayerAvatarFailed] = useState<boolean>(false);
+  const [posterFailed, setPosterFailed] = useState<boolean>(false);
 
-  // Adjust state during render when initialTrack prop changes (e.g., URL navigation)
-  const [prevTrackId, setPrevTrackId] = useState<number | string>(initialTrack.id);
-  if (initialTrack.id !== prevTrackId) {
-    setPrevTrackId(initialTrack.id);
-    setCurrentTrack(initialTrack);
-    setCurrentTimeSec(0);
-  }
+  // If the global player is currently on this track (from / page or direct navigation)
+  const isMatchingTrack =
+    String(globalTrack.id) === String(initialTrack.id) ||
+    Boolean(globalTrack._id && initialTrack._id && globalTrack._id === initialTrack._id);
 
+  const currentTrack = isMatchingTrack ? globalTrack : initialTrack;
 
-  // Audio timer ticker
+  // On mount or navigation: if global player is not playing this track, queue it
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isMatchingTrack) {
+      playTrack(initialTrack, true);
+      setPosterFailed(false);
+    }
+  }, [initialTrack.id, isMatchingTrack, playTrack, initialTrack]);
 
-    const interval = setInterval(() => {
-      setCurrentTimeSec((prev) => {
-        if (prev >= currentTrack.durationSeconds) {
-          if (isRepeat) return 0;
-          return currentTrack.durationSeconds;
-        }
-        return prev + 1;
-      });
-    }, 1000 / playbackSpeed);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack.durationSeconds, playbackSpeed, isRepeat]);
-
-
+  // When next/prev switches track in global player, sync browser URL
+  useEffect(() => {
+    if (globalTrack.id && String(globalTrack.id) !== String(initialTrack.id)) {
+      setPosterFailed(false);
+      router.replace(`/song/${globalTrack.id}`);
+    }
+  }, [globalTrack.id, initialTrack.id, router]);
 
   // Format seconds into MM:SS
   const formatTime = (secs: number) => {
@@ -62,37 +76,11 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     return `${mins.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
   };
 
-  // Track switching
-  const handleSelectTrack = (track: Track) => {
-    setCurrentTrack(track);
-    setCurrentTimeSec(0);
-    setIsPlaying(true);
-    router.push(`/song/${track.id}`);
-  };
-
-  const handleNextTrack = () => {
-    const currentIndex = TRACKS_DATA.findIndex((t) => t.id === currentTrack.id);
-    let nextIndex: number;
-    if (isShuffle) {
-      nextIndex = Math.floor(Math.random() * TRACKS_DATA.length);
-    } else {
-      nextIndex = (currentIndex + 1) % TRACKS_DATA.length;
-    }
-    handleSelectTrack(TRACKS_DATA[nextIndex]);
-  };
-
-  const handlePrevTrack = () => {
-    const currentIndex = TRACKS_DATA.findIndex((t) => t.id === currentTrack.id);
-    const prevIndex = (currentIndex - 1 + TRACKS_DATA.length) % TRACKS_DATA.length;
-    handleSelectTrack(TRACKS_DATA[prevIndex]);
-  };
-
   const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetSeconds = Math.round(ratio * currentTrack.durationSeconds);
-    setCurrentTimeSec(targetSeconds);
+    seekPercent(ratio * 100);
   };
 
   const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -100,11 +88,10 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     const clickX = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     setVolume(Math.round(ratio * 100));
-    setIsMuted(false);
   };
 
   const cycleSpeed = () => {
-    const speeds = [0.75, 1.0, 1.25, 1.5];
+    const speeds = [0.75, 1.0, 1.25, 1.5, 2.0];
     const currentIndex = speeds.indexOf(playbackSpeed);
     const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
     setPlaybackSpeed(nextSpeed);
@@ -124,12 +111,6 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
       showToast("Link copied to clipboard! Share the acoustic master.");
     }
   };
-
-
-  const progressPercent = Math.min(
-    100,
-    (currentTimeSec / (currentTrack.durationSeconds || 1)) * 100
-  );
 
   const currentTheme = currentTrack.theme || {
     name: "Golden Amber & Warm Linen",
@@ -221,8 +202,8 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
             type="button"
             className={`${styles.actionIconBtn} ${isLiked ? styles.actionIconBtnActive : ""}`}
             onClick={() => {
-              setIsLiked(!isLiked);
-              showToast(isLiked ? "Removed from Library favorites" : "Added to Library favorites");
+              toggleLike();
+              showToast(!isLiked ? "Added to Library favorites" : "Removed from Library favorites");
             }}
             title={isLiked ? "Remove Favorite" : "Save to Favorites"}
             aria-label="Toggle favorite"
@@ -295,10 +276,26 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               >
                 <div className={styles.vinylSheen} />
                 <div className={styles.vinylCenterLabel}>
-                  <div className={styles.vinylSpindleHole} />
-                  <span className={styles.labelBrand}>TUNEDIN</span>
-                  <span className={styles.labelTrack}>{currentTrack.title}</span>
-                  <span className={styles.labelRpm}>33⅓ RPM • {currentTrack.format}</span>
+                  {currentTrack.poster_url && !posterFailed ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentTrack.poster_url}
+                        alt={currentTrack.title}
+                        className={styles.vinylPosterImg}
+                        onError={() => setPosterFailed(true)}
+                      />
+                      <div className={styles.vinylPosterOverlay} />
+                      <div className={styles.vinylSpindleHole} />
+                    </>
+                  ) : (
+                    <div className={styles.labelFallbackContent}>
+                      <div className={styles.vinylSpindleHole} />
+                      <span className={styles.labelBrand}>TUNEDIN</span>
+                      <span className={styles.labelTrack}>{currentTrack.title}</span>
+                      <span className={styles.labelRpm}>33⅓ RPM • {currentTrack.format}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -379,8 +376,8 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 type="button"
                 className={`${styles.transportIconBtn} ${isShuffle ? styles.transportIconBtnActive : ""}`}
                 onClick={() => {
-                  setIsShuffle(!isShuffle);
-                  showToast(isShuffle ? "Shuffle disabled" : "Shuffle enabled");
+                  toggleShuffle();
+                  showToast(!isShuffle ? "Shuffle enabled" : "Shuffle disabled");
                 }}
                 title={isShuffle ? "Disable Shuffle" : "Enable Shuffle"}
                 aria-label="Shuffle"
@@ -394,7 +391,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               <button
                 type="button"
                 className={styles.transportIconBtn}
-                onClick={handlePrevTrack}
+                onClick={prevTrack}
                 title="Previous Track"
                 aria-label="Previous Track"
               >
@@ -407,7 +404,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               <button
                 type="button"
                 className={styles.masterPlayBtn}
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={togglePlay}
                 title={isPlaying ? "Pause Track" : "Play Track"}
                 aria-label={isPlaying ? "Pause Track" : "Play Track"}
               >
@@ -425,7 +422,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               <button
                 type="button"
                 className={styles.transportIconBtn}
-                onClick={handleNextTrack}
+                onClick={nextTrack}
                 title="Next Track"
                 aria-label="Next Track"
               >
@@ -438,8 +435,8 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 type="button"
                 className={`${styles.transportIconBtn} ${isRepeat ? styles.transportIconBtnActive : ""}`}
                 onClick={() => {
-                  setIsRepeat(!isRepeat);
-                  showToast(isRepeat ? "Repeat disabled" : "Repeat enabled");
+                  toggleRepeat();
+                  showToast(!isRepeat ? "Repeat enabled" : "Repeat disabled");
                 }}
                 title={isRepeat ? "Disable Repeat" : "Enable Repeat"}
                 aria-label="Repeat"
@@ -466,7 +463,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                 <button
                   type="button"
                   className={styles.volumeIconBtn}
-                  onClick={() => setIsMuted(!isMuted)}
+                  onClick={toggleMute}
                   title={isMuted ? "Unmute" : "Mute"}
                   aria-label="Mute toggle"
                 >

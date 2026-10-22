@@ -33,6 +33,7 @@ export const metadata: Metadata = {
 };
 
 import AuthProvider from "@/components/providers/AuthProvider";
+import { MusicPlayerProvider } from "@/context/MusicPlayerContext";
 
 export default function RootLayout({
   children,
@@ -57,7 +58,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <MusicPlayerProvider>{children}</MusicPlayerProvider>
+        </AuthProvider>
       </body>
     </html>
   );
