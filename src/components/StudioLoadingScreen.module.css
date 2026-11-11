@@ -1,0 +1,354 @@
+.loadingWrapper {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background-color: var(--bg-white-sanctuary, #fefbf3);
+  color: var(--text-dark-primary, #160303);
+  font-family: var(--font-body);
+  overflow: hidden;
+  background-image:
+    radial-gradient(rgba(232, 140, 43, 0.08) 1px, transparent 1px),
+    linear-gradient(to right, rgba(78, 4, 1, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(78, 4, 1, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px, 64px 64px, 64px 64px;
+}
+
+.ambientLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.ambientOrbPrimary {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(560px, 90vw);
+  height: min(560px, 90vw);
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(232, 140, 43, 0.24) 0%,
+    rgba(255, 184, 109, 0.12) 45%,
+    transparent 72%
+  );
+  filter: blur(60px);
+  animation: orbBreathe 4s ease-in-out infinite;
+}
+
+.ambientOrbAccent {
+  position: absolute;
+  bottom: -8rem;
+  right: -6rem;
+  width: min(420px, 75vw);
+  height: min(420px, 75vw);
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(78, 4, 1, 0.1) 0%,
+    rgba(232, 140, 43, 0.08) 50%,
+    transparent 75%
+  );
+  filter: blur(70px);
+}
+
+@keyframes orbBreathe {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+.stageCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-xl, 1.5rem);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(78, 4, 1, 0.08);
+  box-shadow:
+    0 24px 48px -12px rgba(78, 4, 1, 0.1),
+    0 0 36px -6px rgba(232, 140, 43, 0.16),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  animation: cardEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.emblemWrap {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbitRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid rgba(232, 140, 43, 0.14);
+  border-top-color: var(--color-orange-grove, #e88c2b);
+  border-right-color: var(--color-warm-amber, #ffa73f);
+  animation: spinOrbit 1.4s linear infinite;
+}
+
+.orbitRingOuter {
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 1px dashed rgba(232, 140, 43, 0.32);
+  animation: spinOrbitReverse 9s linear infinite;
+}
+
+@keyframes spinOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinOrbitReverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.logoContainer {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(78, 4, 1, 0.08);
+  box-shadow: 0 10px 24px rgba(232, 140, 43, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brandBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.75rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dark-primary, #160303);
+  line-height: 1;
+}
+
+.brandAccent {
+  background: linear-gradient(135deg, #e88c2b 0%, #4c2700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.brandTagline {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-orange-grove, #e88c2b);
+  font-weight: 700;
+}
+
+.equalizer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+}
+
+.eqBar {
+  width: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to top,
+    var(--color-orange-grove, #e88c2b),
+    var(--color-warm-amber, #ffa73f)
+  );
+  animation: eqBounce 0.9s ease-in-out infinite alternate;
+}
+
+.eqBar:nth-child(1) {
+  height: 10px;
+  animation-delay: 0s;
+}
+.eqBar:nth-child(2) {
+  height: 22px;
+  animation-delay: 0.15s;
+}
+.eqBar:nth-child(3) {
+  height: 28px;
+  animation-delay: 0.3s;
+}
+.eqBar:nth-child(4) {
+  height: 18px;
+  animation-delay: 0.45s;
+}
+.eqBar:nth-child(5) {
+  height: 12px;
+  animation-delay: 0.6s;
+}
+
+@keyframes eqBounce {
+  0% {
+    transform: scaleY(0.35);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.statusTextBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.statusTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark-primary, #160303);
+}
+
+.statusSub {
+  font-size: 0.825rem;
+  color: var(--text-dark-secondary, #553e3c);
+  line-height: 1.45;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(78, 4, 1, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.progressSweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 42%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-orange-grove, #e88c2b) 40%,
+    var(--color-warm-amber, #ffa73f) 70%,
+    transparent 100%
+  );
+  animation: sweepLoader 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes sweepLoader {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 105%;
+  }
+}
+
+.telemetryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--surface-white-elevated, #f8f5ec);
+  border: 1px solid rgba(78, 4, 1, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dark-muted, #8c7370);
+}
+
+.telemetryDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: var(--color-orange-grove, #e88c2b);
+  box-shadow: 0 0 8px var(--color-orange-grove, #e88c2b);
+  animation: dotPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientOrbPrimary,
+  .orbitRing,
+  .orbitRingOuter,
+  .eqBar,
+  .progressSweep,
+  .telemetryDot,
+  .stageCard {
+    animation: none !important;
+  }
+}
+

@@ -8,6 +8,7 @@ import { Track, TRACKS_DATA } from "@/data/tracks";
 import { ISong } from "@/models/song.model";
 import { mapSongToTrack } from "@/lib/songAdapter";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
+import StudioLoadingScreen from "@/components/StudioLoadingScreen";
 import styles from "./page.module.css";
 
 export default function HomePage() {
@@ -172,6 +173,10 @@ export default function HomePage() {
     const s = Math.floor(sec % 60);
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
+  if (isLoadingSongs) {
+    return <StudioLoadingScreen />;
+  }
 
   return (
     <div className={styles.appContainer}>
@@ -527,11 +532,7 @@ export default function HomePage() {
               </span>
             </div>
 
-            {isLoadingSongs && dbSongs.length === 0 ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#8C7370" }}>
-                <span>Loading songs and acoustic details from database...</span>
-              </div>
-            ) : filteredTracks.length === 0 ? (
+            {filteredTracks.length === 0 ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "#8C7370" }}>
                 <span>No recordings found matching &ldquo;{searchQuery}&rdquo;.</span>
               </div>
