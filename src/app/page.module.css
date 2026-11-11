@@ -1297,7 +1297,8 @@
   transition: height 0.15s ease;
 }
 
-.scrubberTrack:hover {
+.scrubberTrack:hover,
+.scrubberTrack[data-dragging="true"] {
   height: 6px;
 }
 
@@ -1320,11 +1321,16 @@
   background-color: #FFFFFF;
   box-shadow: 0 0 6px rgba(232, 140, 43, 0.8);
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.scrubberTrack:hover .scrubberThumb {
+.scrubberTrack:hover .scrubberThumb,
+.scrubberTrack[data-dragging="true"] .scrubberThumb {
   opacity: 1;
+}
+
+.scrubberTrack[data-dragging="true"] .scrubberThumb {
+  transform: translate(-50%, -50%) scale(1.2);
 }
 
 /* Right: Volume & Aux Controls */
@@ -1351,6 +1357,12 @@
   background-color: var(--surface-white-subtle, #F0EBE0);
   border-radius: 9999px;
   cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.volumeTrack:hover,
+.volumeTrack[data-dragging="true"] {
+  height: 6px;
 }
 
 .volumeProgress {
@@ -1360,6 +1372,28 @@
   bottom: 0;
   background-color: var(--color-orange-grove, #E88C2B);
   border-radius: 9999px;
+}
+
+.volumeThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 6px rgba(232, 140, 43, 0.8);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.volumeTrack:hover .volumeThumb,
+.volumeTrack[data-dragging="true"] .volumeThumb {
+  opacity: 1;
+}
+
+.volumeTrack[data-dragging="true"] .volumeThumb {
+  transform: translate(-50%, -50%) scale(1.2);
 }
 
 .openSongLink {

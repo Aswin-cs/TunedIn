@@ -1414,7 +1414,12 @@
   border-radius: 9999px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.progressTrack:hover,
+.progressTrack[data-dragging="true"] {
+  height: 6px;
 }
 
 .progressFill {
@@ -1422,6 +1427,29 @@
   background-color: #a63500;
   border-radius: 9999px;
   transition: width 0.1s linear;
+}
+
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 2px solid #a63500;
+  box-shadow: 0 2px 6px rgba(166, 53, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.progressTrack:hover .progressThumb,
+.progressTrack[data-dragging="true"] .progressThumb {
+  opacity: 1;
+}
+
+.progressTrack[data-dragging="true"] .progressThumb {
+  transform: translate(-50%, -50%) scale(1.2);
 }
 
 /* Right Controls */
@@ -1446,13 +1474,41 @@
   border-radius: 9999px;
   position: relative;
   cursor: pointer;
-  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.volumeSliderTrack:hover,
+.volumeSliderTrack[data-dragging="true"] {
+  height: 6px;
 }
 
 .volumeSliderFill {
   height: 100%;
   background-color: #a63500;
   border-radius: 9999px;
+}
+
+.volumeSliderThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 2px solid #a63500;
+  box-shadow: 0 2px 6px rgba(166, 53, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.volumeSliderTrack:hover .volumeSliderThumb,
+.volumeSliderTrack[data-dragging="true"] .volumeSliderThumb {
+  opacity: 1;
+}
+
+.volumeSliderTrack[data-dragging="true"] .volumeSliderThumb {
+  transform: translate(-50%, -50%) scale(1.2);
 }
 
 /* ==============================================================

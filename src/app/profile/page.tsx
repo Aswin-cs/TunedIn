@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import DragSlider from "@/components/DragSlider";
 import styles from "./profile.module.css";
 
 interface UserProfile {
@@ -1272,22 +1273,21 @@ export default function ProfilePage() {
 
           <div className={styles.progressBarContainer}>
             <span className={styles.timeText}>{formatSeconds(progressSec)}</span>
-            <div
-              className={styles.progressTrack}
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-                setProgressSec(Math.round(ratio * currentTrack.durationSeconds));
-              }}
-            >
-              <div
-                className={styles.progressFill}
-                style={{
-                  width: `${Math.min(100, (progressSec / currentTrack.durationSeconds) * 100)}%`,
-                }}
-              />
-            </div>
+            <DragSlider
+              value={
+                currentTrack.durationSeconds > 0
+                  ? Math.min(100, (progressSec / currentTrack.durationSeconds) * 100)
+                  : 0
+              }
+              onChange={(pct) =>
+                setProgressSec(Math.round((pct / 100) * currentTrack.durationSeconds))
+              }
+              ariaLabel="Track progress"
+              ariaValueText={`${formatSeconds(progressSec)} of ${currentTrack.duration}`}
+              trackClassName={styles.progressTrack}
+              fillClassName={styles.progressFill}
+              thumbClassName={styles.progressThumb}
+            />
             <span className={styles.timeText}>{currentTrack.duration}</span>
           </div>
         </div>
@@ -1309,21 +1309,17 @@ export default function ProfilePage() {
             <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#5c4037" }}>
               {volume === 0 ? "volume_off" : volume < 50 ? "volume_down" : "volume_up"}
             </span>
-            <div
-              className={styles.volumeSliderTrack}
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const newVol = Math.round(Math.max(0, Math.min(1, clickX / rect.width)) * 100);
-                setVolume(newVol);
-              }}
+            <DragSlider
+              value={volume}
+              onChange={(pct) => setVolume(Math.round(pct))}
+              ariaLabel="Volume adjuster"
+              ariaValueText={`${volume}%`}
               title={`Volume: ${volume}%`}
-            >
-              <div
-                className={styles.volumeSliderFill}
-                style={{ width: `${volume}%` }}
-              />
-            </div>
+              step={5}
+              trackClassName={styles.volumeSliderTrack}
+              fillClassName={styles.volumeSliderFill}
+              thumbClassName={styles.volumeSliderThumb}
+            />
           </div>
         </div>
       </footer>

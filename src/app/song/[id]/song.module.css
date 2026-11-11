@@ -737,7 +737,8 @@
   transition: height 0.15s ease;
 }
 
-.scrubberTrack:hover {
+.scrubberTrack:hover,
+.scrubberTrack[data-dragging="true"] {
   height: 7px;
 }
 
@@ -764,7 +765,8 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.scrubberTrack:hover .scrubberThumb {
+.scrubberTrack:hover .scrubberThumb,
+.scrubberTrack[data-dragging="true"] .scrubberThumb {
   transform: translate(-50%, -50%) scale(1.2);
   box-shadow: 0 2px 8px rgba(232, 140, 43, 0.35);
 }
@@ -935,6 +937,12 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  transition: height 0.15s ease;
+}
+
+.volumeTrack:hover,
+.volumeTrack[data-dragging="true"] {
+  height: 7px;
 }
 
 .volumeFill {
@@ -958,7 +966,8 @@
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.volumeTrack:hover .volumeThumb {
+.volumeTrack:hover .volumeThumb,
+.volumeTrack[data-dragging="true"] .volumeThumb {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1.15);
 }

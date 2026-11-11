@@ -9,6 +9,7 @@ import { ISong } from "@/models/song.model";
 import { mapSongToTrack } from "@/lib/songAdapter";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
 import StudioLoadingScreen from "@/components/StudioLoadingScreen";
+import DragSlider from "@/components/DragSlider";
 import styles from "./page.module.css";
 
 export default function HomePage() {
@@ -159,13 +160,6 @@ export default function HomePage() {
     } else {
       prevTrack();
     }
-  };
-
-  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    seekPercent(ratio * 100);
   };
 
   const formatSeconds = (sec: number) => {
@@ -854,24 +848,15 @@ export default function HomePage() {
           {/* Interactive Progress Rail */}
           <div className={styles.scrubberRow}>
             <span className={styles.timecode}>{formatSeconds(currentTimeSec)}</span>
-            <div
-              className={styles.scrubberTrack}
-              onClick={handleScrubberClick}
-              role="slider"
-              aria-label="Track progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progress)}
-            >
-              <div
-                className={styles.scrubberProgress}
-                style={{ width: `${progress}%` }}
-              />
-              <div
-                className={styles.scrubberThumb}
-                style={{ left: `${progress}%` }}
-              />
-            </div>
+            <DragSlider
+              value={progress}
+              onChange={seekPercent}
+              ariaLabel="Track progress"
+              ariaValueText={`${formatSeconds(currentTimeSec)} of ${currentTrack.duration}`}
+              trackClassName={styles.scrubberTrack}
+              fillClassName={styles.scrubberProgress}
+              thumbClassName={styles.scrubberThumb}
+            />
             <span className={styles.timecode}>{currentTrack.duration}</span>
           </div>
         </div>
@@ -896,19 +881,17 @@ export default function HomePage() {
             )}
           </button>
 
-          <div
-            className={styles.volumeTrack}
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const clickX = e.clientX - rect.left;
-              setVolume(Math.max(0, Math.min(100, Math.round((clickX / rect.width) * 100))));
-            }}
-          >
-            <div
-              className={styles.volumeProgress}
-              style={{ width: `${isMuted ? 0 : volume}%` }}
-            />
-          </div>
+          <DragSlider
+            value={isMuted ? 0 : volume}
+            onChange={(pct) => setVolume(Math.round(pct))}
+            ariaLabel="Volume adjuster"
+            ariaValueText={`${isMuted ? 0 : volume}%`}
+            title={`Volume: ${isMuted ? 0 : volume}%`}
+            step={5}
+            trackClassName={styles.volumeTrack}
+            fillClassName={styles.volumeProgress}
+            thumbClassName={styles.volumeThumb}
+          />
 
           {/* Fullscreen Expand to dedicated song page */}
           <Link

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Track } from "@/data/tracks";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
+import DragSlider from "@/components/DragSlider";
 import styles from "./song.module.css";
 
 interface SongPlayerClientProps {
@@ -74,20 +75,6 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     const mins = Math.floor(secs / 60);
     const remainder = Math.floor(secs % 60);
     return `${mins.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
-  };
-
-  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    seekPercent(ratio * 100);
-  };
-
-  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    setVolume(Math.round(ratio * 100));
   };
 
   const cycleSpeed = () => {
@@ -344,24 +331,15 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
 
           {/* Interactive Progress Timeline / Scrubber */}
           <div className={styles.scrubberContainer}>
-            <div
-              className={styles.scrubberTrack}
-              onClick={handleScrubberClick}
-              role="slider"
-              aria-label="Audio progress scrubber"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progressPercent)}
-            >
-              <div
-                className={styles.scrubberFill}
-                style={{ width: `${progressPercent}%` }}
-              />
-              <div
-                className={styles.scrubberThumb}
-                style={{ left: `${progressPercent}%` }}
-              />
-            </div>
+            <DragSlider
+              value={progressPercent}
+              onChange={seekPercent}
+              ariaLabel="Audio progress scrubber"
+              ariaValueText={`${formatTime(currentTimeSec)} of ${currentTrack.duration}`}
+              trackClassName={styles.scrubberTrack}
+              fillClassName={styles.scrubberFill}
+              thumbClassName={styles.scrubberThumb}
+            />
 
             <div className={styles.timecodesRow}>
               <span className={styles.timecodeCurrent}>{formatTime(currentTimeSec)}</span>
@@ -479,24 +457,17 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                   )}
                 </button>
 
-                <div
-                  className={styles.volumeTrack}
-                  onClick={handleVolumeClick}
-                  role="slider"
-                  aria-label="Volume slider"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={isMuted ? 0 : volume}
-                >
-                  <div
-                    className={styles.volumeFill}
-                    style={{ width: `${isMuted ? 0 : volume}%` }}
-                  />
-                  <div
-                    className={styles.volumeThumb}
-                    style={{ left: `${isMuted ? 0 : volume}%` }}
-                  />
-                </div>
+                <DragSlider
+                  value={isMuted ? 0 : volume}
+                  onChange={(pct) => setVolume(Math.round(pct))}
+                  ariaLabel="Volume slider"
+                  ariaValueText={`${isMuted ? 0 : volume}%`}
+                  title={`Volume: ${isMuted ? 0 : volume}%`}
+                  step={5}
+                  trackClassName={styles.volumeTrack}
+                  fillClassName={styles.volumeFill}
+                  thumbClassName={styles.volumeThumb}
+                />
               </div>
             </div>
           </div>
