@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import baseStyles from "./DragSlider.module.css";
 
 interface DragSliderProps {
   /** Current slider value on a 0–100 scale. */
   value: number;
   /** Called continuously during click, touch, drag, and keyboard adjustments (0–100). */
-  onChange: (percent: number) => void;
+  onChange?: (percent: number) => void;
   /** Optional callback fired when a drag gesture ends with the final value (0–100). */
   onChangeEnd?: (percent: number) => void;
   /** Accessible label for screen readers. */
@@ -47,6 +47,15 @@ export default function DragSlider({
   const activePointerIdRef = useRef<number | null>(null);
   const isDraggingRef = useRef<boolean>(false);
 
+  // Keep latest callbacks in refs so window listeners never read stale closures
+  const onChangeRef = useRef(onChange);
+  const onChangeEndRef = useRef(onChangeEnd);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onChangeEndRef.current = onChangeEnd;
+  }, [onChange, onChangeEnd]);
+
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragValue, setDragValue] = useState<number | null>(null);
 
@@ -59,6 +68,23 @@ export default function DragSlider({
     return clampPercent(ratio * 100);
   }, []);
 
+  const detachWindowListenersRef = useRef<(() => void) | null>(null);
+
+  const cleanupDrag = useCallback(() => {
+    isDraggingRef.current = false;
+    activePointerIdRef.current = null;
+    setIsDragging(false);
+    setDragValue(null);
+    detachWindowListenersRef.current?.();
+    detachWindowListenersRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      detachWindowListenersRef.current?.();
+    };
+  }, []);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Only respond to primary mouse button or touch/pen input
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -66,54 +92,59 @@ export default function DragSlider({
     e.preventDefault();
     e.stopPropagation();
 
-    activePointerIdRef.current = e.pointerId;
+    // Clean up any leftover listeners from an interrupted gesture
+    detachWindowListenersRef.current?.();
+
+    const pointerId = e.pointerId;
+    activePointerIdRef.current = pointerId;
     isDraggingRef.current = true;
     setIsDragging(true);
 
     try {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      e.currentTarget.setPointerCapture(pointerId);
     } catch {
-      // Ignore if pointer capture is unavailable in this environment
+      // Ignore if pointer capture is unavailable
     }
 
     const nextPercent = computePercentFromClientX(e.clientX);
     setDragValue(nextPercent);
-    onChange(nextPercent);
-  };
+    onChangeRef.current?.(nextPercent);
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current || activePointerIdRef.current !== e.pointerId) {
-      return;
-    }
-
-    const nextPercent = computePercentFromClientX(e.clientX);
-    setDragValue(nextPercent);
-    onChange(nextPercent);
-  };
-
-  const finishDrag = (e: React.PointerEvent<HTMLDivElement>, commitFinal: boolean) => {
-    if (!isDraggingRef.current || activePointerIdRef.current !== e.pointerId) {
-      return;
-    }
-
-    const finalPercent = computePercentFromClientX(e.clientX);
-    isDraggingRef.current = false;
-    activePointerIdRef.current = null;
-    setIsDragging(false);
-    setDragValue(null);
-
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
+    const handleWindowPointerMove = (moveEvent: PointerEvent) => {
+      if (!isDraggingRef.current || activePointerIdRef.current !== moveEvent.pointerId) {
+        return;
       }
-    } catch {
-      // Ignore if capture was already released
-    }
+      const movedPercent = computePercentFromClientX(moveEvent.clientX);
+      setDragValue(movedPercent);
+      onChangeRef.current?.(movedPercent);
+    };
 
-    if (commitFinal) {
-      onChange(finalPercent);
-      onChangeEnd?.(finalPercent);
-    }
+    const handleWindowPointerUp = (upEvent: PointerEvent) => {
+      if (!isDraggingRef.current || activePointerIdRef.current !== upEvent.pointerId) {
+        return;
+      }
+      const finalPercent = computePercentFromClientX(upEvent.clientX);
+      cleanupDrag();
+      onChangeRef.current?.(finalPercent);
+      onChangeEndRef.current?.(finalPercent);
+    };
+
+    const handleWindowPointerCancel = (cancelEvent: PointerEvent) => {
+      if (!isDraggingRef.current || activePointerIdRef.current !== cancelEvent.pointerId) {
+        return;
+      }
+      cleanupDrag();
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    window.addEventListener("pointercancel", handleWindowPointerCancel);
+
+    detachWindowListenersRef.current = () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerCancel);
+    };
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -141,8 +172,8 @@ export default function DragSlider({
 
     if (next !== null) {
       e.preventDefault();
-      onChange(next);
-      onChangeEnd?.(next);
+      onChangeRef.current?.(next);
+      onChangeEndRef.current?.(next);
     }
   };
 
@@ -154,10 +185,6 @@ export default function DragSlider({
       className={`${baseStyles.sliderTrack} ${trackClassName}`.trim()}
       data-dragging={isDragging ? "true" : "false"}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={(e) => finishDrag(e, true)}
-      onPointerCancel={(e) => finishDrag(e, false)}
-      onLostPointerCapture={(e) => finishDrag(e, false)}
       onKeyDown={handleKeyDown}
       role="slider"
       tabIndex={0}
@@ -181,4 +208,3 @@ export default function DragSlider({
     </div>
   );
 }
-

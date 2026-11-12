@@ -19,6 +19,7 @@ export default function HomePage() {
     currentTrack,
     isPlaying,
     currentTimeSec,
+    durationSec,
     progress,
     volume,
     isMuted,
@@ -46,6 +47,7 @@ export default function HomePage() {
   const [activeChip, setActiveChip] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeNav, setActiveNav] = useState<string>("home");
+  const [scrubPreviewPercent, setScrubPreviewPercent] = useState<number | null>(null);
 
   // 1. Fetch songs and their details from /api/songs (models/song.model.ts)
   useEffect(() => {
@@ -167,6 +169,13 @@ export default function HomePage() {
     const s = Math.floor(sec % 60);
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
+  const displayedTimeSec =
+    scrubPreviewPercent !== null
+      ? Math.round(
+          (scrubPreviewPercent / 100) * (durationSec || currentTrack.durationSeconds || 180)
+        )
+      : currentTimeSec;
 
   if (isLoadingSongs) {
     return <StudioLoadingScreen />;
@@ -629,8 +638,15 @@ export default function HomePage() {
         {/* ============================================================== */}
         <aside className={styles.rightInspector}>
           <div className={styles.inspectorHeader}>
-            <span className={styles.inspectorHeading}>Acoustic Telemetry</span>
-            <span className={styles.specValue}>{currentTrack.format}</span>
+            <div className={styles.inspectorHeadingGroup}>
+              <span
+                className={`${styles.inspectorLiveDot} ${
+                  isPlaying ? styles.inspectorLiveDotActive : ""
+                }`}
+              />
+              <span className={styles.inspectorHeading}>Acoustic Telemetry</span>
+            </div>
+            <span className={styles.inspectorFormatPill}>{currentTrack.format}</span>
           </div>
 
           {/* Artwork Display */}
@@ -649,11 +665,39 @@ export default function HomePage() {
                 </svg>
               </div>
             )}
+            <Link
+              href={`/song/${currentTrack.id}`}
+              className={styles.inspectorArtAction}
+              title="Open Dedicated Song Player"
+            >
+              <span>Open Player</span>
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </Link>
           </div>
 
-          <div>
-            <h3 className={styles.inspectorTrackTitle}>{currentTrack.title}</h3>
-            <p className={styles.inspectorArtist}>{currentTrack.artist}</p>
+          <div className={styles.inspectorTrackBlock}>
+            <div className={styles.inspectorTrackMeta}>
+              <h3 className={styles.inspectorTrackTitle}>{currentTrack.title}</h3>
+              <p className={styles.inspectorArtist}>
+                {currentTrack.artist}
+                {currentTrack.album ? ` • ${currentTrack.album}` : ""}
+              </p>
+            </div>
+            <div className={styles.inspectorTrackActions}>
+              <button
+                type="button"
+                className={styles.inspectorIconBtn}
+                onClick={toggleLike}
+                aria-label="Toggle favorite"
+                title={isLiked ? "Remove from favorites" : "Save to favorites"}
+              >
+                <svg width="16" height="16" fill={isLiked ? "#E88C2B" : "none"} viewBox="0 0 24 24" stroke={isLiked ? "#E88C2B" : "currentColor"}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Telemetry Hardware & Song Details Specs Card */}
@@ -675,11 +719,11 @@ export default function HomePage() {
                   textTransform: "capitalize",
                 }}
               >
-                {currentTrack.verified ? "Verified Master" : (currentTrack.verificationStatus || "Pending")}
+                {currentTrack.verified ? "✓ Verified Master" : (currentTrack.verificationStatus || "Pending")}
               </span>
             </div>
             <div className={styles.specRow}>
-              <span className={styles.specLabel}>Curator / Uploader</span>
+              <span className={styles.specLabel}>Curator</span>
               <span className={styles.specValue}>
                 {typeof currentTrack.uploadUser === "object" &&
                 currentTrack.uploadUser &&
@@ -689,12 +733,22 @@ export default function HomePage() {
               </span>
             </div>
             <div className={styles.specRow}>
-              <span className={styles.specLabel}>Streams / Plays</span>
+              <span className={styles.specLabel}>Plays</span>
               <span className={styles.specValue}>{currentTrack.plays || 0} plays</span>
             </div>
             <div className={styles.specRow}>
               <span className={styles.specLabel}>Genre</span>
-              <span className={styles.specValue}>{currentTrack.genre}</span>
+              <div className={styles.inspectorGenreTags}>
+                {currentTrack.genre
+                  .split("•")
+                  .map((g) => g.trim())
+                  .filter(Boolean)
+                  .map((g) => (
+                    <span key={g} className={styles.inspectorGenreTag}>
+                      {g}
+                    </span>
+                  ))}
+              </div>
             </div>
           </div>
 
@@ -710,7 +764,7 @@ export default function HomePage() {
               <div className={styles.aiObsGrid}>
                 {Object.entries(currentTrack.aiObservation).map(([key, val]) => (
                   <div key={key} className={styles.aiObsRow}>
-                    <span className={styles.aiObsKey}>{key}:</span>
+                    <span className={styles.aiObsKey}>{key}</span>
                     <span className={styles.aiObsVal}>{String(val)}</span>
                   </div>
                 ))}
@@ -719,8 +773,8 @@ export default function HomePage() {
           )}
 
           {/* Liner Notes & Synchronized Lyrics */}
-          <div className={styles.navSection}>
-            <span className={styles.navLabel}>Liner Notes &amp; Acoustic Details</span>
+          <div className={styles.inspectorNotesSection}>
+            <span className={styles.inspectorSectionLabel}>Liner Notes &amp; Acoustic Details</span>
             <div className={styles.lyricsSnippet}>
               &ldquo;{currentTrack.telemetry?.linerNotes ||
                 "Recorded with pristine analog warmth. Preserves natural acoustic reflections without artificial limiter compression."}&rdquo;
@@ -847,12 +901,16 @@ export default function HomePage() {
 
           {/* Interactive Progress Rail */}
           <div className={styles.scrubberRow}>
-            <span className={styles.timecode}>{formatSeconds(currentTimeSec)}</span>
+            <span className={styles.timecode}>{formatSeconds(displayedTimeSec)}</span>
             <DragSlider
-              value={progress}
-              onChange={seekPercent}
+              value={scrubPreviewPercent ?? progress}
+              onChange={(pct) => setScrubPreviewPercent(pct)}
+              onChangeEnd={(pct) => {
+                setScrubPreviewPercent(null);
+                seekPercent(pct);
+              }}
               ariaLabel="Track progress"
-              ariaValueText={`${formatSeconds(currentTimeSec)} of ${currentTrack.duration}`}
+              ariaValueText={`${formatSeconds(displayedTimeSec)} of ${currentTrack.duration}`}
               trackClassName={styles.scrubberTrack}
               fillClassName={styles.scrubberProgress}
               thumbClassName={styles.scrubberThumb}

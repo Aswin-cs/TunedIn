@@ -46,6 +46,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [playerAvatarFailed, setPlayerAvatarFailed] = useState<boolean>(false);
   const [posterFailed, setPosterFailed] = useState<boolean>(false);
+  const [scrubPreviewPercent, setScrubPreviewPercent] = useState<number | null>(null);
 
   // If the global player is currently on this track (from / page or direct navigation)
   const isMatchingTrack =
@@ -76,6 +77,13 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     const remainder = Math.floor(secs % 60);
     return `${mins.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
   };
+
+  const displayedTimeSec =
+    scrubPreviewPercent !== null
+      ? Math.round(
+          (scrubPreviewPercent / 100) * (durationSec || currentTrack.durationSeconds || 180)
+        )
+      : currentTimeSec;
 
   const cycleSpeed = () => {
     const speeds = [0.75, 1.0, 1.25, 1.5, 2.0];
@@ -332,17 +340,21 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
           {/* Interactive Progress Timeline / Scrubber */}
           <div className={styles.scrubberContainer}>
             <DragSlider
-              value={progressPercent}
-              onChange={seekPercent}
+              value={scrubPreviewPercent ?? progressPercent}
+              onChange={(pct) => setScrubPreviewPercent(pct)}
+              onChangeEnd={(pct) => {
+                setScrubPreviewPercent(null);
+                seekPercent(pct);
+              }}
               ariaLabel="Audio progress scrubber"
-              ariaValueText={`${formatTime(currentTimeSec)} of ${currentTrack.duration}`}
+              ariaValueText={`${formatTime(displayedTimeSec)} of ${currentTrack.duration}`}
               trackClassName={styles.scrubberTrack}
               fillClassName={styles.scrubberFill}
               thumbClassName={styles.scrubberThumb}
             />
 
             <div className={styles.timecodesRow}>
-              <span className={styles.timecodeCurrent}>{formatTime(currentTimeSec)}</span>
+              <span className={styles.timecodeCurrent}>{formatTime(displayedTimeSec)}</span>
               <span>{currentTrack.duration}</span>
             </div>
           </div>
