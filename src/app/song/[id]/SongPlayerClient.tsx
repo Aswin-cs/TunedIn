@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -45,8 +45,12 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [playerAvatarFailed, setPlayerAvatarFailed] = useState<boolean>(false);
-  const [posterFailed, setPosterFailed] = useState<boolean>(false);
+  const [failedPosterUrl, setFailedPosterUrl] = useState<string | null>(null);
   const [scrubPreviewPercent, setScrubPreviewPercent] = useState<number | null>(null);
+
+  // Refs to coordinate initial route track sync vs. next/prev track URL sync without looping
+  const syncingToTrackIdRef = useRef<string | null>(null);
+  const prevGlobalTrackIdRef = useRef<string>(String(globalTrack.id));
 
   // If the global player is currently on this track (from / page or direct navigation)
   const isMatchingTrack =
@@ -54,22 +58,47 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     Boolean(globalTrack._id && initialTrack._id && globalTrack._id === initialTrack._id);
 
   const currentTrack = isMatchingTrack ? globalTrack : initialTrack;
+  const posterFailed = Boolean(currentTrack.poster_url && failedPosterUrl === currentTrack.poster_url);
 
-  // On mount or navigation: if global player is not playing this track, queue it
+  // On mount or route param change: if global player is not playing this track, queue it
   useEffect(() => {
+    const targetId = String(initialTrack.id);
     if (!isMatchingTrack) {
+      syncingToTrackIdRef.current = targetId;
       playTrack(initialTrack, true);
-      setPosterFailed(false);
+    } else {
+      syncingToTrackIdRef.current = null;
+      prevGlobalTrackIdRef.current = String(globalTrack.id);
     }
-  }, [initialTrack.id, isMatchingTrack, playTrack, initialTrack]);
+    // Only re-run when the route's initialTrack changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTrack.id]);
 
   // When next/prev switches track in global player, sync browser URL
   useEffect(() => {
-    if (globalTrack.id && String(globalTrack.id) !== String(initialTrack.id)) {
-      setPosterFailed(false);
-      router.replace(`/song/${globalTrack.id}`);
+    const currentGlobalId = String(globalTrack.id);
+    const routeId = String(initialTrack.id);
+
+    // Wait until playTrack(initialTrack) finishes updating globalTrack
+    if (syncingToTrackIdRef.current !== null) {
+      if (currentGlobalId === syncingToTrackIdRef.current || isMatchingTrack) {
+        syncingToTrackIdRef.current = null;
+        prevGlobalTrackIdRef.current = currentGlobalId;
+      }
+      return;
     }
-  }, [globalTrack.id, initialTrack.id, router]);
+
+    if (
+      globalTrack.id &&
+      currentGlobalId !== routeId &&
+      prevGlobalTrackIdRef.current !== currentGlobalId
+    ) {
+      prevGlobalTrackIdRef.current = currentGlobalId;
+      router.replace(`/song/${globalTrack.id}`);
+    } else {
+      prevGlobalTrackIdRef.current = currentGlobalId;
+    }
+  }, [globalTrack.id, initialTrack.id, isMatchingTrack, router]);
 
   // Format seconds into MM:SS
   const formatTime = (secs: number) => {
@@ -278,7 +307,7 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
                         src={currentTrack.poster_url}
                         alt={currentTrack.title}
                         className={styles.vinylPosterImg}
-                        onError={() => setPosterFailed(true)}
+                        onError={() => setFailedPosterUrl(currentTrack.poster_url ?? null)}
                       />
                       <div className={styles.vinylPosterOverlay} />
                       <div className={styles.vinylSpindleHole} />

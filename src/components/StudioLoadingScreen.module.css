@@ -78,16 +78,7 @@
   z-index: 1;
   width: 100%;
   max-width: 420px;
-  padding: 2.5rem 2rem;
-  border-radius: var(--radius-xl, 1.5rem);
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(78, 4, 1, 0.08);
-  box-shadow:
-    0 24px 48px -12px rgba(78, 4, 1, 0.1),
-    0 0 36px -6px rgba(232, 140, 43, 0.16),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  padding: 1.5rem 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -149,10 +140,8 @@
 .logoContainer {
   width: 76px;
   height: 76px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid rgba(78, 4, 1, 0.08);
-  box-shadow: 0 10px 24px rgba(232, 140, 43, 0.22);
+  border-radius: 9999px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
