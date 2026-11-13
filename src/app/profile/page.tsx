@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import DragSlider from "@/components/DragSlider";
+import { useMusicPlayer } from "@/context/MusicPlayerContext";
+import { Track } from "@/data/tracks";
 import styles from "./profile.module.css";
 
 interface UserProfile {
@@ -151,9 +153,64 @@ const PLAYLISTS_DATA: Playlist[] = [
   },
 ];
 
+const mapFavoriteToTrack = (fav: FavoriteTrack): Track => ({
+  id: fav.id,
+  title: fav.title,
+  artist: fav.artist,
+  album: fav.album,
+  duration: fav.duration,
+  durationSeconds: fav.durationSeconds,
+  dateAdded: "Favorites",
+  format: "FLAC",
+  rate: "96kHz / 24-bit",
+  genre: "Studio Favorite",
+  releaseYear: "2026",
+  coverAccent: "#E88C2B",
+  coverSecondary: "#4E0401",
+  vibe: "Warm Analog",
+  lyrics: [],
+  telemetry: {
+    sampleRate: "96kHz",
+    bitDepth: "24-bit",
+    dynamicRange: "118 dB",
+    codec: "FLAC Lossless",
+    channels: "Stereo 2.0",
+    recordingStudio: "Studio Sanctuary",
+    tapeMachine: "Studer A800 24-track",
+    microphones: "Neumann U87 Ai",
+    masterEngineer: "Studio Curator",
+    linerNotes: "Selected from personal lossless favorites archive.",
+  },
+  poster_url: fav.imageUrl,
+  verified: true,
+});
+
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const {
+    currentTrack: globalTrack,
+    isPlaying,
+    currentTimeSec,
+    durationSec,
+    progress,
+    volume,
+    isMuted,
+    isShuffle,
+    isRepeat,
+    playTrack,
+    togglePlay,
+    seekPercent,
+    nextTrack,
+    prevTrack,
+    setVolume,
+    toggleMute,
+    toggleShuffle,
+    toggleRepeat,
+    setQueue,
+    openPip,
+    isPipOpen,
+  } = useMusicPlayer();
 
   // Profile data (Initialized with accurate session/fallback defaults)
   const [profile, setProfile] = useState<UserProfile>({
@@ -256,14 +313,8 @@ export default function ProfilePage() {
     }
   }, [session, status]);
 
-  // Tracks & Playlists state
+  // Tracks state
   const [tracks, setTracks] = useState<FavoriteTrack[]>(INITIAL_TRACKS);
-  const [currentTrack, setCurrentTrack] = useState<FavoriteTrack>(INITIAL_TRACKS[0]);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [progressSec, setProgressSec] = useState<number>(84); // 01:24
-  const [isShuffle, setIsShuffle] = useState<boolean>(false);
-  const [isRepeat, setIsRepeat] = useState<boolean>(false);
-  const [volume, setVolume] = useState<number>(75);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Audiophile Gear toggles
@@ -273,20 +324,6 @@ export default function ProfilePage() {
     wasapiExclusive: true,
     dspCorrection: false,
   });
-
-  // Simulated live progress increment when playing
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setProgressSec((prev) => {
-        if (prev >= currentTrack.durationSeconds) {
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack.durationSeconds]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -356,37 +393,25 @@ export default function ProfilePage() {
   };
 
   const handlePlayTrack = (track: FavoriteTrack) => {
-    setCurrentTrack(track);
-    setIsPlaying(true);
-    setProgressSec(0);
+    playTrack(mapFavoriteToTrack(track), true);
     showToast(`Now playing "${track.title}"`);
   };
 
   const handlePlayAll = () => {
     if (tracks.length > 0) {
-      setCurrentTrack(tracks[0]);
-      setIsPlaying(true);
-      setProgressSec(0);
+      const mapped = tracks.map(mapFavoriteToTrack);
+      setQueue(mapped);
+      playTrack(mapped[0], true);
       showToast(`Playing all ${tracks.length} favorite tracks`);
     }
   };
 
   const handleNextTrack = () => {
-    const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
-    if (currentIndex === -1) return;
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentTrack(tracks[nextIndex]);
-    setProgressSec(0);
-    setIsPlaying(true);
+    nextTrack();
   };
 
   const handlePrevTrack = () => {
-    const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
-    if (currentIndex === -1) return;
-    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    setCurrentTrack(tracks[prevIndex]);
-    setProgressSec(0);
-    setIsPlaying(true);
+    prevTrack();
   };
 
   const handleSortTracks = () => {
@@ -1039,11 +1064,14 @@ export default function ProfilePage() {
                 {/* Tracklist Items */}
                 <div className={styles.trackList} id="track-list">
                   {tracks.map((track, idx) => {
-                    const isCurrentPlaying = currentTrack.id === track.id && isPlaying;
+                    const isSelected =
+                      String(globalTrack.id) === String(track.id) ||
+                      globalTrack.title === track.title;
+                    const isCurrentPlaying = isSelected && isPlaying;
                     return (
                       <div
                         key={track.id}
-                        className={`${styles.trackRow} ${currentTrack.id === track.id ? styles.trackRowActive : ""}`}
+                        className={`${styles.trackRow} ${isSelected ? styles.trackRowActive : ""}`}
                         onClick={() => handlePlayTrack(track)}
                       >
                         {/* Index / Play button on hover */}
@@ -1052,10 +1080,14 @@ export default function ProfilePage() {
                           <button
                             type="button"
                             className={styles.trackPlayIcon}
-                            title={`Play ${track.title}`}
+                            title={isCurrentPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handlePlayTrack(track);
+                              if (isCurrentPlaying) {
+                                togglePlay();
+                              } else {
+                                handlePlayTrack(track);
+                              }
                             }}
                           >
                             <span className="material-symbols-outlined">
@@ -1185,21 +1217,21 @@ export default function ProfilePage() {
           <div className={styles.playerThumb}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={currentTrack.imageUrl}
-              alt={currentTrack.title}
+              src={globalTrack.poster_url || "/music-logo-orbit.svg"}
+              alt={globalTrack.title}
               className={styles.playerThumbImg}
             />
           </div>
           <div className={styles.playerTrackDetails}>
-            <span className={styles.playerTrackName}>{currentTrack.title}</span>
+            <span className={styles.playerTrackName}>{globalTrack.title}</span>
             <span className={styles.playerTrackSub}>
-              {currentTrack.artist} • {currentTrack.album}
+              {globalTrack.artist} • {globalTrack.album}
             </span>
           </div>
           <button
             type="button"
             className={styles.heartBtn}
-            onClick={() => showToast(`Saved "${currentTrack.title}"`)}
+            onClick={() => showToast(`Saved "${globalTrack.title}"`)}
             title="Favorite Track"
           >
             <span className="material-symbols-outlined">favorite</span>
@@ -1212,10 +1244,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className={`${styles.playerIconButton} ${isShuffle ? styles.playerIconButtonActive : ""}`}
-              onClick={() => {
-                setIsShuffle(!isShuffle);
-                showToast(`Shuffle ${!isShuffle ? "on" : "off"}`);
-              }}
+              onClick={toggleShuffle}
               title="Shuffle"
             >
               <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
@@ -1237,7 +1266,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className={styles.playPausePillBtn}
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={togglePlay}
               title={isPlaying ? "Pause" : "Play"}
             >
               <span className="material-symbols-outlined">
@@ -1259,10 +1288,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className={`${styles.playerIconButton} ${isRepeat ? styles.playerIconButtonActive : ""}`}
-              onClick={() => {
-                setIsRepeat(!isRepeat);
-                showToast(`Repeat ${!isRepeat ? "on" : "off"}`);
-              }}
+              onClick={toggleRepeat}
               title="Repeat"
             >
               <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
@@ -1272,28 +1298,33 @@ export default function ProfilePage() {
           </div>
 
           <div className={styles.progressBarContainer}>
-            <span className={styles.timeText}>{formatSeconds(progressSec)}</span>
+            <span className={styles.timeText}>{formatSeconds(currentTimeSec)}</span>
             <DragSlider
-              value={
-                currentTrack.durationSeconds > 0
-                  ? Math.min(100, (progressSec / currentTrack.durationSeconds) * 100)
-                  : 0
-              }
-              onChange={(pct) =>
-                setProgressSec(Math.round((pct / 100) * currentTrack.durationSeconds))
-              }
+              value={progress}
+              onChangeEnd={(pct) => seekPercent(pct)}
               ariaLabel="Track progress"
-              ariaValueText={`${formatSeconds(progressSec)} of ${currentTrack.duration}`}
+              ariaValueText={`${formatSeconds(currentTimeSec)} of ${formatSeconds(durationSec)}`}
               trackClassName={styles.progressTrack}
               fillClassName={styles.progressFill}
               thumbClassName={styles.progressThumb}
             />
-            <span className={styles.timeText}>{currentTrack.duration}</span>
+            <span className={styles.timeText}>{formatSeconds(durationSec)}</span>
           </div>
         </div>
 
-        {/* Right: Queue & Volume */}
+        {/* Right: Picture-in-Picture, Queue & Volume */}
         <div className={styles.playerRightCol}>
+          <button
+            type="button"
+            className={`${styles.playerIconButton} ${isPipOpen ? styles.playerIconButtonActive : ""}`}
+            onClick={() => openPip("in-app")}
+            title={isPipOpen ? "Picture-in-Picture Active" : "Open Picture-in-Picture"}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+              picture_in_picture_alt
+            </span>
+          </button>
+
           <button
             type="button"
             className={styles.playerIconButton}
@@ -1306,15 +1337,23 @@ export default function ProfilePage() {
           </button>
 
           <div className={styles.volumeControlGroup}>
-            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#5c4037" }}>
-              {volume === 0 ? "volume_off" : volume < 50 ? "volume_down" : "volume_up"}
-            </span>
+            <button
+              type="button"
+              className={styles.playerIconButton}
+              onClick={toggleMute}
+              title={isMuted ? "Unmute" : "Mute"}
+              style={{ padding: 0, width: "auto", height: "auto" }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#5c4037" }}>
+                {isMuted || volume === 0 ? "volume_off" : volume < 50 ? "volume_down" : "volume_up"}
+              </span>
+            </button>
             <DragSlider
-              value={volume}
+              value={isMuted ? 0 : volume}
               onChange={(pct) => setVolume(Math.round(pct))}
               ariaLabel="Volume adjuster"
-              ariaValueText={`${volume}%`}
-              title={`Volume: ${volume}%`}
+              ariaValueText={`${isMuted ? 0 : volume}%`}
+              title={`Volume: ${isMuted ? 0 : volume}%`}
               step={5}
               trackClassName={styles.volumeSliderTrack}
               fillClassName={styles.volumeSliderFill}
