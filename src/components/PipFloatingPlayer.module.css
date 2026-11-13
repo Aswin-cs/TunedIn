@@ -1,0 +1,418 @@
+/* ============================================================== */
+/* TUNEDIN FLOATING PICTURE-IN-PICTURE (PIP) MINI PLAYER          */
+/* ============================================================== */
+
+.pipContainer {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(78, 4, 1, 0.12);
+  border-radius: var(--radius-xl, 1.25rem);
+  box-shadow:
+    0 16px 40px -8px rgba(78, 4, 1, 0.22),
+    0 0 28px -4px rgba(232, 140, 43, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  padding: 0.875rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 1000;
+  font-family: var(--font-body);
+  color: var(--text-dark-primary, #160303);
+  animation: pipSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@keyframes pipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pipStandaloneWindow {
+  position: static;
+  width: 100%;
+  height: 100vh;
+  max-width: none;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background-color: var(--bg-white-sanctuary, #fefbf3);
+  padding: 1rem 1.25rem;
+  justify-content: space-between;
+}
+
+/* Header bar */
+.pipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(78, 4, 1, 0.06);
+}
+
+.pipTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.pipLiveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: var(--text-dark-muted, #8c7370);
+  flex-shrink: 0;
+}
+
+.pipLiveDotActive {
+  background-color: var(--color-orange-grove, #e88c2b);
+  box-shadow: 0 0 8px var(--color-orange-grove, #e88c2b);
+  animation: pipDotPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pipDotPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.pipHeading {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-deep-maroon, #4e0401);
+  white-space: nowrap;
+}
+
+.pipAutoBadge {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(232, 140, 43, 0.12);
+  color: #c25e00;
+  border: 1px solid rgba(232, 140, 43, 0.28);
+}
+
+.pipControlsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pipIconBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: var(--text-dark-secondary, #553e3c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pipIconBtn:hover {
+  background: rgba(232, 140, 43, 0.12);
+  color: var(--color-orange-grove, #e88c2b);
+}
+
+.pipIconBtnPinned {
+  color: var(--color-orange-grove, #e88c2b) !important;
+  background: rgba(232, 140, 43, 0.16);
+}
+
+/* Track Body */
+.pipBody {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.pipArtworkWrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-sm, 0.5rem);
+  background: linear-gradient(135deg, #4e0401, #220d0d);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(78, 4, 1, 0.2);
+  border: 1px solid rgba(78, 4, 1, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pipArtworkImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pipVinylFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffa73f;
+}
+
+.pipMetaBlock {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.pipTrackTitleLink {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-dark-primary, #160303);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.pipTrackTitleLink:hover {
+  color: var(--color-orange-grove, #e88c2b);
+}
+
+.pipArtistText {
+  font-size: 0.75rem;
+  color: var(--text-dark-secondary, #553e3c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pipFormatTag {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #c25e00;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Equalizer mini waveform */
+.pipWaveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+
+.pipWaveBar {
+  width: 2.5px;
+  border-radius: 9999px;
+  background-color: var(--color-orange-grove, #e88c2b);
+  animation: pipWavePulse 0.9s ease-in-out infinite alternate;
+}
+
+.pipWaveBar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.pipWaveBar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.pipWaveBar:nth-child(3) { height: 9px; animation-delay: 0.2s; }
+
+@keyframes pipWavePulse {
+  0% { height: 4px; }
+  100% { height: 14px; }
+}
+
+/* Scrubber row */
+.pipScrubberRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.pipTimecode {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dark-muted, #8c7370);
+  min-width: 30px;
+}
+
+.pipScrubberTrack {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  background-color: var(--surface-white-subtle, #f0ebe0);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.pipScrubberTrack:hover,
+.pipScrubberTrack[data-dragging="true"] {
+  height: 6px;
+}
+
+.pipScrubberProgress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--color-orange-grove, #e88c2b), var(--color-warm-amber, #ffa73f));
+  border-radius: 9999px;
+}
+
+.pipScrubberThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  box-shadow: 0 0 6px rgba(232, 140, 43, 0.8);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.pipScrubberTrack:hover .pipScrubberThumb,
+.pipScrubberTrack[data-dragging="true"] .pipScrubberThumb {
+  opacity: 1;
+}
+
+/* Transport Row */
+.pipTransportRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.pipTransportMain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pipActionBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: var(--text-dark-secondary, #553e3c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pipActionBtn:hover {
+  color: var(--text-dark-primary, #160303);
+  transform: scale(1.1);
+}
+
+.pipActionBtnActive {
+  color: var(--color-orange-grove, #e88c2b) !important;
+}
+
+.pipPlayBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background-color: var(--color-orange-grove, #e88c2b);
+  color: #120303;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(232, 140, 43, 0.35);
+  transition: all 0.2s ease;
+}
+
+.pipPlayBtn:hover {
+  background-color: var(--color-warm-amber, #ffa73f);
+  transform: scale(1.06);
+}
+
+.pipVolumeGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 80px;
+}
+
+.pipVolumeTrack {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  background-color: var(--surface-white-subtle, #f0ebe0);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.pipVolumeTrack:hover,
+.pipVolumeTrack[data-dragging="true"] {
+  height: 6px;
+}
+
+.pipVolumeFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background-color: var(--color-orange-grove, #e88c2b);
+  border-radius: 9999px;
+}
+
+.pipVolumeThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  box-shadow: 0 0 4px rgba(232, 140, 43, 0.8);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.pipVolumeTrack:hover .pipVolumeThumb,
+.pipVolumeTrack[data-dragging="true"] .pipVolumeThumb {
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .pipContainer {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 90px;
+  }
+}
+

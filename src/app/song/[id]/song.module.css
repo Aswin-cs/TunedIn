@@ -903,6 +903,12 @@
   transform: translateY(-1px);
 }
 
+.speedSelectorActive {
+  background: rgba(232, 140, 43, 0.16);
+  border-color: #e88c2b;
+  color: #C2410C;
+}
+
 .volumeContainer {
   display: flex;
   align-items: center;

@@ -26,6 +26,8 @@ export default function HomePage() {
     isShuffle,
     isRepeat,
     isLiked,
+    isPipOpen,
+    togglePip,
     playTrack,
     togglePlay,
     seekPercent,
@@ -950,6 +952,19 @@ export default function HomePage() {
             fillClassName={styles.volumeProgress}
             thumbClassName={styles.volumeThumb}
           />
+
+          {/* Picture-in-Picture Mode Toggle */}
+          <button
+            type="button"
+            className={`${styles.dockIconBtn} ${isPipOpen ? styles.dockIconBtnActive : ""}`}
+            onClick={togglePip}
+            title={isPipOpen ? "Close Picture-in-Picture" : "Picture-in-Picture (Auto on tab switch or idle)"}
+            aria-label="Picture-in-Picture"
+          >
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2v-6m-4 2h6m0 0l-4-4m4 4l-4 4" />
+            </svg>
+          </button>
 
           {/* Fullscreen Expand to dedicated song page */}
           <Link

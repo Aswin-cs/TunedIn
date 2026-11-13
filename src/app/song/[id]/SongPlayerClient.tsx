@@ -41,6 +41,8 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
     toggleRepeat,
     setPlaybackSpeed,
     toggleLike,
+    isPipOpen,
+    togglePip,
   } = useMusicPlayer();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -467,16 +469,27 @@ export default function SongPlayerClient({ initialTrack }: SongPlayerClientProps
               </button>
             </div>
 
-            {/* Bottom Secondary Utility Controls: Speed & Volume */}
+            {/* Bottom Secondary Utility Controls: Speed, PiP & Volume */}
             <div className={styles.auxControlsRow}>
-              <button
-                type="button"
-                className={styles.speedSelector}
-                onClick={cycleSpeed}
-                title="Change Playback Speed"
-              >
-                {playbackSpeed}x SPEED
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <button
+                  type="button"
+                  className={styles.speedSelector}
+                  onClick={cycleSpeed}
+                  title="Change Playback Speed"
+                >
+                  {playbackSpeed}x SPEED
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.speedSelector} ${isPipOpen ? styles.speedSelectorActive : ""}`}
+                  onClick={togglePip}
+                  title={isPipOpen ? "Close Picture-in-Picture" : "Picture-in-Picture (Auto on tab switch or idle)"}
+                >
+                  PIP {isPipOpen ? "ON" : "MODE"}
+                </button>
+              </div>
 
               <div className={styles.volumeContainer}>
                 <button
