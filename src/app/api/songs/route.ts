@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/config/connectDb";
 import { Song } from "@/models/song.model";
 
-export const dynamic = "force-dynamic";
-
-
 export async function GET(request: NextRequest) {
   try {
     await connectDb();

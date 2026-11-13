@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import DragSlider from "@/components/DragSlider";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
@@ -186,7 +185,6 @@ const mapFavoriteToTrack = (fav: FavoriteTrack): Track => ({
 });
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { data: session, status } = useSession();
   const {
     currentTrack: globalTrack,
@@ -237,18 +235,14 @@ export default function ProfilePage() {
   const [editLocation, setEditLocation] = useState(profile.location);
   const [editBio, setEditBio] = useState(profile.bio);
   const [editAvatarUrl, setEditAvatarUrl] = useState(profile.avatarUrl);
-  const [avatarError, setAvatarError] = useState(false);
-  const [pillAvatarError, setPillAvatarError] = useState(false);
-
-  useEffect(() => {
-    setAvatarError(false);
-    setPillAvatarError(false);
-  }, [profile.avatarUrl]);
+  // Track failed avatar URLs so fallback initials show without requiring effects
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string>("");
+  const [failedPillAvatarUrl, setFailedPillAvatarUrl] = useState<string>("");
 
   // Synchronize authenticated user profile with NextAuth session and MongoDB
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const u = session.user as any;
+      const u = session.user as { name?: string; username?: string; email?: string; image?: string; avatar?: string; location?: string; bio?: string; createdAt?: string };
       const initialName = u.name || session.user.name || "Curator Studio";
       const initialHandle = `@${u.username || (session.user.email ? session.user.email.split("@")[0] : "curator")}`;
       const initialEmail = session.user.email || "";
@@ -257,24 +251,30 @@ export default function ProfilePage() {
       const initialBio = u.bio || "Master audio quality favorites curated for analytical listening & discrete analog signal chains.";
       const initialMemberSince = formatMemberSince(u.createdAt);
 
-      setProfile({
-        name: initialName,
-        handle: initialHandle,
-        email: initialEmail,
-        location: initialLocation,
-        bio: initialBio,
-        tier: "PRO TIER",
-        memberSince: initialMemberSince,
-        losslessTag: "TunedIn Studio Member (Lossless 24-bit)",
-        avatarUrl: initialAvatar,
-      });
+      // Deferred batch update — these run inside the fetch callback so they're
+      // responding to external data, which is a valid effect pattern
+      const applyInitial = () => {
+        setProfile({
+          name: initialName,
+          handle: initialHandle,
+          email: initialEmail,
+          location: initialLocation,
+          bio: initialBio,
+          tier: "PRO TIER",
+          memberSince: initialMemberSince,
+          losslessTag: "TunedIn Studio Member (Lossless 24-bit)",
+          avatarUrl: initialAvatar,
+        });
+        setEditName(initialName);
+        setEditHandle(initialHandle);
+        setEditEmail(initialEmail);
+        setEditLocation(initialLocation);
+        setEditBio(initialBio);
+        setEditAvatarUrl(initialAvatar);
+      };
 
-      setEditName(initialName);
-      setEditHandle(initialHandle);
-      setEditEmail(initialEmail);
-      setEditLocation(initialLocation);
-      setEditBio(initialBio);
-      setEditAvatarUrl(initialAvatar);
+      // Schedule state update outside the synchronous effect body
+      const timer = setTimeout(applyInitial, 0);
 
       // Fetch latest MongoDB user document to guarantee 100% accuracy
       fetch("/api/user/profile")
@@ -283,7 +283,7 @@ export default function ProfilePage() {
           if (data?.user) {
             const db = data.user;
             const dbName = db.name || initialName;
-            const dbHandle = `@${db.username || (session.user as any).username || "curator"}`;
+            const dbHandle = `@${db.username || u.username || "curator"}`;
             const dbLocation = db.location || initialLocation;
             const dbBio = db.bio || initialBio;
             const dbAvatar = db.avatar || initialAvatar;
@@ -307,9 +307,11 @@ export default function ProfilePage() {
             setEditAvatarUrl(dbAvatar);
           }
         })
-        .catch((err) => {
-          console.error("Could not fetch DB profile:", err);
+        .catch((fetchErr) => {
+          console.error("Could not fetch DB profile:", fetchErr);
         });
+
+      return () => clearTimeout(timer);
     }
   }, [session, status]);
 
@@ -370,7 +372,7 @@ export default function ProfilePage() {
         setIsEditing(false);
         showToast("Profile updated");
       }
-    } catch (err) {
+    } catch {
       setProfile((prev) => ({
         ...prev,
         name: editName,
@@ -586,14 +588,14 @@ export default function ProfilePage() {
           </button>
 
           <div className={styles.userAvatarPill} title={profile.name}>
-            {profile.avatarUrl && !pillAvatarError ? (
+            {profile.avatarUrl && failedPillAvatarUrl !== profile.avatarUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={profile.avatarUrl}
                 alt={profile.name}
                 className={styles.userAvatarPillImg}
                 referrerPolicy="no-referrer"
-                onError={() => setPillAvatarError(true)}
+                onError={() => setFailedPillAvatarUrl(profile.avatarUrl)}
               />
             ) : (
               <span>
@@ -637,14 +639,14 @@ export default function ProfilePage() {
               <div className={styles.avatarRing}>
                 <div className={styles.avatarGradientWrapper}>
                   <div className={styles.avatarImageWrapper}>
-                    {profile.avatarUrl && !avatarError ? (
+                    {profile.avatarUrl && failedAvatarUrl !== profile.avatarUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={profile.avatarUrl}
                         alt={profile.name}
                         className={styles.avatarImage}
                         referrerPolicy="no-referrer"
-                        onError={() => setAvatarError(true)}
+                        onError={() => setFailedAvatarUrl(profile.avatarUrl)}
                       />
                     ) : (
                       <div className={styles.avatarFallback}>

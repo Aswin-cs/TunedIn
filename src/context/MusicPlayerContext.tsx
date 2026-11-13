@@ -97,12 +97,21 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasOpenedByAutoRef = useRef<boolean>(false);
 
-  // Sync refs for event listeners and cross-tab broadcasts
+  // Sync refs — updated in effects so they're never written during render
   const isPlayingRef = useRef<boolean>(isPlaying);
-  isPlayingRef.current = isPlaying;
   const currentTrackRef = useRef<Track>(currentTrack);
-  currentTrackRef.current = currentTrack;
+  const queueRef = useRef<Track[]>(queue);
+  const isShuffleRef = useRef<boolean>(isShuffle);
+  const isRepeatRef = useRef<boolean>(isRepeat);
   const tabIdRef = useRef<string>("");
+  // nextTrackRef lets audio-event effects call nextTrack() without a forward-reference
+  const nextTrackRef = useRef<() => void>(() => {});
+
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+  useEffect(() => { isShuffleRef.current = isShuffle; }, [isShuffle]);
+  useEffect(() => { isRepeatRef.current = isRepeat; }, [isRepeat]);
   const isRemoteSyncRef = useRef<boolean>(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const posterImgCacheRef = useRef<{ url: string; img: HTMLImageElement } | null>(null);
@@ -131,13 +140,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       posterImgCacheRef.current = null;
     }
   }, [currentTrack.poster_url]);
-
-  // Sync duration whenever currentTrack changes
-  useEffect(() => {
-    if (currentTrack.durationSeconds) {
-      setDurationSec(currentTrack.durationSeconds);
-    }
-  }, [currentTrack]);
 
   // Audio volume and mute sync
   useEffect(() => {
@@ -222,11 +224,11 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     };
 
     const handleEnded = () => {
-      if (isRepeat) {
+      if (isRepeatRef.current) {
         audio.currentTime = 0;
         audio.play().catch(() => { });
       } else {
-        nextTrack();
+        nextTrackRef.current();
       }
     };
 
@@ -246,7 +248,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
     };
-  }, [currentTrack, isRepeat]);
+  }, [currentTrack]);
 
   // Fallback ticker for tracks without real audio_url (e.g. static studio tracks)
   useEffect(() => {
@@ -256,11 +258,11 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setCurrentTimeSec((prev) => {
         const total = currentTrack.durationSeconds || durationSec || 180;
         if (prev >= total) {
-          if (isRepeat) {
+          if (isRepeatRef.current) {
             setProgress(0);
             return 0;
           }
-          nextTrack();
+          nextTrackRef.current();
           return total;
         }
         const nextTime = prev + 1;
@@ -270,7 +272,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }, 1000 / playbackSpeed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, currentTrack, durationSec, isRepeat, playbackSpeed]);
+  }, [isPlaying, currentTrack, durationSec, playbackSpeed]);
 
   // Helper to broadcast changes across tabs
   const broadcast = useCallback((message: Record<string, unknown>) => {
@@ -383,30 +385,35 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   );
 
   const nextTrack = useCallback(() => {
-    const list = queue.length > 0 ? queue : TRACKS_DATA;
+    const list = queueRef.current.length > 0 ? queueRef.current : TRACKS_DATA;
+    const cur = currentTrackRef.current;
     const currentIndex = list.findIndex(
-      (t) => String(t.id) === String(currentTrack.id) || (t._id && t._id === currentTrack._id)
+      (t) => String(t.id) === String(cur.id) || (t._id && t._id === cur._id)
     );
 
     let nextIndex: number;
-    if (isShuffle) {
+    if (isShuffleRef.current) {
       nextIndex = Math.floor(Math.random() * list.length);
     } else {
       nextIndex = (currentIndex + 1) % list.length;
     }
 
     playTrack(list[nextIndex], true);
-  }, [queue, currentTrack, isShuffle, playTrack]);
+  }, [playTrack]);
+
+  // Keep nextTrackRef in sync so audio event handlers can call it without deps
+  useEffect(() => { nextTrackRef.current = nextTrack; }, [nextTrack]);
 
   const prevTrack = useCallback(() => {
-    const list = queue.length > 0 ? queue : TRACKS_DATA;
+    const list = queueRef.current.length > 0 ? queueRef.current : TRACKS_DATA;
+    const cur = currentTrackRef.current;
     const currentIndex = list.findIndex(
-      (t) => String(t.id) === String(currentTrack.id) || (t._id && t._id === currentTrack._id)
+      (t) => String(t.id) === String(cur.id) || (t._id && t._id === cur._id)
     );
 
     const prevIndex = (currentIndex - 1 + list.length) % list.length;
     playTrack(list[prevIndex], true);
-  }, [queue, currentTrack, playTrack]);
+  }, [playTrack]);
 
   const setVolume = useCallback(
     (vol: number) => {
@@ -441,23 +448,23 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       broadcast({
         type: "SHUFFLE_REPEAT",
         isShuffle: next,
-        isRepeat,
+        isRepeat: isRepeatRef.current,
       });
       return next;
     });
-  }, [broadcast, isRepeat]);
+  }, [broadcast]);
 
   const toggleRepeat = useCallback(() => {
     setIsRepeat((prev) => {
       const next = !prev;
       broadcast({
         type: "SHUFFLE_REPEAT",
-        isShuffle,
+        isShuffle: isShuffleRef.current,
         isRepeat: next,
       });
       return next;
     });
-  }, [broadcast, isShuffle]);
+  }, [broadcast]);
 
   const setPlaybackSpeed = useCallback((speed: number) => {
     setPlaybackSpeedState(speed);
